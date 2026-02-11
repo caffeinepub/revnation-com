@@ -1,118 +1,28 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Bike detail, management, and brand browsing/search (frontend)",
+  "title": "Admin-only sample bike seeding control (frontend)",
   "requirements": [
     {
-      "id": "REQ-24",
-      "summary": "Add a Bike Detail page/route that shows images, pricing, specs, and details with missing-data and not-found states.",
+      "id": "REQ-29",
+      "summary": "Add an admin-only UI control to trigger backend sample-bike seeding via a React Query mutation, with confirmation, error handling, and post-success query refresh.",
       "acceptanceCriteria": [
-        "A new route exists for viewing an individual bike (e.g., /bike/$bikeId) and renders a bike detail page.",
-        "The page shows: brand + name, price section, image gallery (or placeholder), specs section, and details section.",
-        "If a bike ID does not exist, the page shows a not-found state with a navigation option back to browsing.",
-        "All user-facing text is in English."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/public/assets/generated/bike-placeholder.dim_1200x800.png",
-          "operation": "create",
-          "description": "Add the required neutral motorcycle silhouette placeholder image asset at this exact path for use when a bike has no images."
-        },
-        {
-          "path": "frontend/src/pages/BikeDetailPage.tsx",
-          "operation": "create",
-          "description": "Create a Bike Detail page that reads $bikeId from the route, fetches the bike via React Query, and renders: brand+name header, a simple image gallery (fall back to frontend/public/assets/generated/bike-placeholder.dim_1200x800.png when images are missing/empty), a pricing section (using available structured fields), specs, and long-form details; include loading, empty/placeholder, and not-found UI states, all in English."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register and wire the new /bike/$bikeId route to BikeDetailPage so it is reachable via navigation links."
-        }
-      ]
-    },
-    {
-      "id": "REQ-25",
-      "summary": "Create authenticated bike management UI for signed-in users to create/edit/delete bikes, with auth-gated controls and live list updates.",
-      "acceptanceCriteria": [
-        "There is at least one dedicated page for bike management accessible from the UI when authenticated (e.g., “Manage Bikes”).",
-        "The bike management UI supports: create new bike, edit existing bike fields (specs, price, images list, details), and delete a bike (with confirmation).",
-        "Unauthenticated users cannot access bike-create/edit/delete actions (UI hides the actions or shows a sign-in prompt via the existing auth-gating patterns).",
-        "Successful create/edit/delete actions provide an English success toast/feedback and the bike lists update without a manual refresh."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/ManageBikesPage.tsx",
-          "operation": "create",
-          "description": "Create a dedicated “Manage Bikes” page that is gated by authentication using the existing auth patterns (useCurrentUser + RequireAuthAction). Show a user-scoped bike list (when available) and provide create/edit forms for name/brand/specs/region, structured pricing fields, images list (static URLs/paths as text), and long-form details; include a delete action with confirmation. Use the authorization component’s frontend guidance for auth-gating patterns; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/BikeForm.tsx",
-          "operation": "create",
-          "description": "Add a reusable bike create/edit form component used by ManageBikesPage to edit all required fields (including structured price, images list as text, and details). Use shadcn-ui form/input primitives already present in the codebase without modifying immutable ui components; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add and wire a /manage-bikes route pointing to ManageBikesPage."
-        },
-        {
-          "path": "frontend/src/components/AppHeader.tsx",
-          "operation": "modify",
-          "description": "Add a “Manage Bikes” entry point in the header navigation/actions that is only visible when authenticated (following the existing My Drafts/Create actions pattern). Use the authorization component’s frontend guidance to ensure unauthenticated users do not see management controls; verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-26",
-      "summary": "Extend the React Query layer with bike create/update/delete mutations and consistent query invalidation and unauthorized UX.",
-      "acceptanceCriteria": [
-        "New React Query hooks exist for bike create/update/delete operations and call the corresponding backend methods.",
-        "On mutation success, relevant queries (at minimum ['bikes']) are invalidated so the UI reflects updates immediately.",
-        "On unauthorized errors, the UI shows an English error message indicating the user must be signed in."
+        "React Query includes a new mutation hook to call the backend sample seeding method, with appropriate error handling and success messaging in English.",
+        "The UI shows a clearly labeled admin-only control (e.g., a button on the Manage Bikes page) to trigger sample seeding; non-admin authenticated users and unauthenticated users do not see it.",
+        "Triggering the action shows a confirmation step before inserting the sample bikes.",
+        "On success, the frontend invalidates/refetches relevant queries so that newly seeded bikes appear without a manual refresh (at minimum: the public bikes query and the user/admin bikes management list where applicable).",
+        "If the backend rejects the call as unauthorized, the UI displays a clear English error message and does not modify the UI state."
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add bike-specific React Query hooks: (1) a bike detail query hook (e.g., keyed by ['bike', bikeId]) calling the backend bike-by-id function, (2) createBike/editBike/deleteBike mutation hooks calling corresponding backend functions, (3) consistent invalidation on success for ['bikes'], ['bike', bikeId], and brand-derived queries used by Brands/Brand Detail pages. Ensure unauthorized failures surface an English message (e.g., 'You must be signed in to manage bikes') and keep existing review/compare flows compiling. Use the authorization component’s frontend error-handling guidance for trap/Unauthorized messages; verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-27",
-      "summary": "Add brand browsing pages and update search so bike results link to Bike Detail and brand matches are discoverable.",
-      "acceptanceCriteria": [
-        "A Brands index page exists that lists brands derived from existing bikes and supports searching/filtering the brand list.",
-        "A Brand detail page exists that shows bikes for the selected brand, with links to each bike’s detail page.",
-        "The global navigation includes an entry point to the Brands page.",
-        "In Search Results, Bike results link to the Bike Detail route (not the Compare page).",
-        "Brand terms entered in search return relevant bikes (at minimum matching against bike.brand as currently implemented)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/BrandsPage.tsx",
-          "operation": "create",
-          "description": "Create a Brands index page that derives a de-duplicated brand list from the fetched bikes, supports client-side filtering/search of brands, and links each brand to its Brand detail route."
+          "description": "Add a new React Query mutation hook (e.g., useSeedPopularBikeEntries) that calls actor.seedPopularBikeEntries(), shows English success messaging, and on success invalidates/refetches at minimum ['bikes'] and ['userBikes']. Ensure robust error handling: if the thrown message includes 'Unauthorized', surface a clear English admin-only error. Verify the component's usage instructions before implementing. (Uses authorization capability via existing admin detection patterns in the app.)"
         },
         {
-          "path": "frontend/src/pages/BrandDetailPage.tsx",
-          "operation": "create",
-          "description": "Create a Brand detail page/route that reads $brandId (brand name slug or encoded value), filters bikes by brand (case-insensitive), and lists matching bikes with links to /bike/$bikeId."
-        },
-        {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/pages/ManageBikesPage.tsx",
           "operation": "modify",
-          "description": "Register and wire routes for /brands (BrandsPage) and /brands/$brandId (BrandDetailPage)."
-        },
-        {
-          "path": "frontend/src/components/AppHeader.tsx",
-          "operation": "modify",
-          "description": "Add a global navigation entry point to /brands (visible to all users)."
-        },
-        {
-          "path": "frontend/src/pages/SearchResultsPage.tsx",
-          "operation": "modify",
-          "description": "Update search results so Bike results link to /bike/$bikeId (Bike Detail) instead of /compare, and make brand matches discoverable (e.g., add a Brands section derived from bikes matching the query and/or add brand-linked UI affordances). Keep all user-facing text in English."
+          "description": "Expose an admin-only 'Seed sample bikes' action on the Manage Bikes page: use the existing authorization system's admin role signal (e.g., useCurrentUser().isAdmin) to hide the control for non-admin and unauthenticated users. Add a confirmation step (use existing AlertDialog UI already used on this page) before triggering the seed mutation. On confirm, call the new mutation hook; while running, disable the control and prevent duplicate clicks; on success rely on query invalidation so newly seeded bikes appear without manual refresh. If unauthorized, display a clear English error and do not alter local UI state beyond closing/canceling the dialog as appropriate. Verify the component's usage instructions before implementing."
         }
       ]
     }

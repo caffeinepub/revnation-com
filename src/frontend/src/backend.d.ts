@@ -127,4 +127,5 @@ export interface backendInterface {
     publishReview(reviewId: bigint): Promise<void>;
     rateReview(reviewId: bigint, rating: number): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    seedPopularBikeEntries(): Promise<void>;
 }

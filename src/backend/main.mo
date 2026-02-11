@@ -11,10 +11,7 @@ import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 
-// Conditional migration with-clause.
-(with migration = Migration.run)
 actor {
   public type Category = {
     #news;
@@ -131,6 +128,130 @@ actor {
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  public shared ({ caller }) func seedPopularBikeEntries() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can seed popular bike entries");
+    };
+
+    let popularBikes = [
+      {
+        id = nextBikeId;
+        name = "Yamaha YZF-R1";
+        brand = "Yamaha";
+        specs = "998cc, 200hp, 199kg";
+        priceRange = { min = 17399; max = 18000 };
+        images = [
+          "https://example.com/yamaha1.jpg",
+          "https://example.com/yamaha2.jpg",
+        ];
+        details = "Superbike with advanced electronics and lightweight frame";
+        region = #asia;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+      {
+        id = nextBikeId + 1;
+        name = "Honda CBR1000RR";
+        brand = "Honda";
+        specs = "999cc, 189hp, 196kg";
+        priceRange = { min = 16000; max = 17500 };
+        images = [
+          "https://example.com/honda1.jpg",
+          "https://example.com/honda2.jpg",
+        ];
+        details = "Track-focused superbike with reliability and performance";
+        region = #asia;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+      {
+        id = nextBikeId + 2;
+        name = "Suzuki Hayabusa";
+        brand = "Suzuki";
+        specs = "1340cc, 187hp, 264kg";
+        priceRange = { min = 15999; max = 17000 };
+        images = [
+          "https://example.com/hayabusa1.jpg",
+          "https://example.com/hayabusa2.jpg",
+        ];
+        details = "Hyperbike known for top speed and grand touring comfort";
+        region = #asia;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+      {
+        id = nextBikeId + 3;
+        name = "BMW S1000RR";
+        brand = "BMW";
+        specs = "999cc, 205hp, 197kg";
+        priceRange = { min = 19995; max = 23000 };
+        images = [
+          "https://example.com/bmw1.jpg",
+          "https://example.com/bmw2.jpg",
+        ];
+        details = "High-performance superbike with state-of-the-art electronics";
+        region = #europe;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+      {
+        id = nextBikeId + 4;
+        name = "Kawasaki Ninja ZX-10R";
+        brand = "Kawasaki";
+        specs = "998cc, 203hp, 207kg";
+        priceRange = { min = 16499; max = 17000 };
+        images = [
+          "https://example.com/kawasaki1.jpg",
+          "https://example.com/kawasaki2.jpg",
+        ];
+        details = "World Superbike championship-winning technology";
+        region = #asia;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+      {
+        id = nextBikeId + 5;
+        name = "BMW S1000RR";
+        brand = "BMW";
+        specs = "999cc, 205hp, 197kg";
+        priceRange = { min = 19995; max = 23000 };
+        images = [
+          "https://example.com/bmw1.jpg",
+          "https://example.com/bmw2.jpg",
+        ];
+        details = "High-performance superbike with state-of-the-art electronics";
+        region = #europe;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+      {
+        id = nextBikeId + 6;
+        name = "Triumph Speed Triple 1200 RS";
+        brand = "Triumph";
+        specs = "1160cc, 177hp, 198kg";
+        priceRange = { min = 17995; max = 20000 };
+        images = [
+          "https://example.com/triumph1.jpg",
+          "https://example.com/triumph2.jpg",
+        ];
+        details = "Naked sportbike with strong performance and comfort";
+        region = #europe;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+      {
+        id = nextBikeId + 7;
+        name = "Ducati Panigale V4";
+        brand = "Ducati";
+        specs = "1103cc, 214hp, 198kg";
+        priceRange = { min = 21995; max = 30000 };
+        images = [
+          "https://example.com/ducati1.jpg",
+          "https://example.com/ducati2.jpg",
+        ];
+        details = "Italian superbike combining performance and style";
+        region = #europe;
+        createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+      },
+    ];
+
+    bikes.addAll(popularBikes.values());
+    nextBikeId += 8;
+  };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {

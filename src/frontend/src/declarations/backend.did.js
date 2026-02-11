@@ -161,6 +161,7 @@ export const idlService = IDL.Service({
   'publishReview' : IDL.Func([IDL.Nat], [], []),
   'rateReview' : IDL.Func([IDL.Nat, IDL.Nat8], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'seedPopularBikeEntries' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
@@ -319,6 +320,7 @@ export const idlFactory = ({ IDL }) => {
     'publishReview' : IDL.Func([IDL.Nat], [], []),
     'rateReview' : IDL.Func([IDL.Nat, IDL.Nat8], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'seedPopularBikeEntries' : IDL.Func([], [], []),
   });
 };
 

@@ -210,6 +210,7 @@ export interface backendInterface {
     publishReview(reviewId: bigint): Promise<void>;
     rateReview(reviewId: bigint, rating: number): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    seedPopularBikeEntries(): Promise<void>;
 }
 import type { Article as _Article, Bike as _Bike, Category as _Category, ContentStatus as _ContentStatus, PriceRange as _PriceRange, Region as _Region, Review as _Review, Score as _Score, TimeValue as _TimeValue, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -645,6 +646,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
+    async seedPopularBikeEntries(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.seedPopularBikeEntries();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.seedPopularBikeEntries();
             return result;
         }
     }

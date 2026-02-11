@@ -335,6 +335,31 @@ export function useDeleteBike() {
   });
 }
 
+export function useSeedPopularBikeEntries() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.seedPopularBikeEntries();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bikes'] });
+      queryClient.invalidateQueries({ queryKey: ['userBikes'] });
+      toast.success('Sample bikes added successfully');
+    },
+    onError: (error: any) => {
+      const message = error.message || 'Failed to seed sample bikes';
+      if (message.includes('Unauthorized')) {
+        toast.error('Only administrators can seed sample bikes');
+      } else {
+        toast.error(message);
+      }
+    },
+  });
+}
+
 // Comments
 export function useGetCommentsByReview(reviewId: bigint) {
   const { actor, isFetching } = useActor();

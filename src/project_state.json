@@ -1,14 +1,16 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 13,
   "summary": "AI-powered global motorcycle news and reviews website with comparisons, AI summaries/recommendations, regional support, and premium dark-mode UI.",
-  "architectural_notes": [],
+  "architectural_notes": [
+    "Introduce a structured content-block system for Articles and Bike Details to support multiple inline images and YouTube embed blocks throughout the body."
+  ],
   "known_issues": [
     "After signing in, the UI does not show “Create Article” / “Create Review” buttons, blocking content creation.",
-    "Domain validation error shown: “Domain revnation.com must be between 5 and 50 characters and contain only letters, numbers, and hyphens.” (rejection of revnation.com)."
+    "Domain validation error shown: “Domain revnation.com must be between 5 and 50 characters and contain only letters, numbers, and hyphens.” (rejection of revnation.com).",
+    "Clicking an existing created bike opens a 'Bike Not Found' page (bike detail routing/lookup failing for created bike)."
   ],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Neutral motorcycle silhouette placeholder image on a transparent or subtle neutral background (bike-placeholder.dim_1200x800.png)",
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-add-a-homepage-that-highlights-1-trending-bikes-section-2-latest-launches-carousel-and-3-entry-points-to-the-main-categories-news-reviews-comparisons-electric-racing-concepts-buying-guides-with-a-premium-fast-loading-layout",
@@ -193,6 +195,14 @@
         "REQ-27"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-expose-the-sample-bike-seeding-capability-in-the-frontend-as-an-admin-only-action-and-refresh-bike-listings-after-seeding-completes",
+      "title": "Expose the sample-bike seeding capability in the frontend as an admin-only action, and refresh bike listings after seeding completes.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -303,6 +313,38 @@
       "summary": "Add a conditional backend state migration so existing deployed state can be upgraded safely to the new Bike schema with sensible defaults for any newly added fields.",
       "reqIds": [
         "REQ-23"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Add inline media blocks (multiple images + YouTube embeds) within Article content editor and Bike Specs/Bike Detail editor, with placement options.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Add a Privacy Policy section/page under the website navigation.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Add brand logo support: logo field on Brand create/edit and display on Brand detail (and wherever brand is shown).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Support automatic bulk/sample bike seeding: insert a predefined list of popular bike models via an admin action (no file upload).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Add a backend admin-only method that seeds (inserts) a predefined list of sample/popular bike entries into the existing Bikes store, without requiring any file upload.",
+      "reqIds": [
+        "REQ-28"
       ],
       "status": "pending"
     }

@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useGetUserBikes, useDeleteBike } from '../hooks/useQueries';
+import { useGetUserBikes, useDeleteBike, useSeedPopularBikeEntries } from '../hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Database } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import RequireAuthAction from '../components/RequireAuthAction';
 import BikeForm from '../components/BikeForm';
 import type { Bike } from '../backend';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,10 +29,13 @@ const regionLabels: Record<string, string> = {
 
 export default function ManageBikesPage() {
   const { data: bikes, isLoading } = useGetUserBikes();
+  const { isAdmin } = useCurrentUser();
   const deleteBike = useDeleteBike();
+  const seedBikes = useSeedPopularBikeEntries();
   const [showForm, setShowForm] = useState(false);
   const [editingBike, setEditingBike] = useState<Bike | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [seedDialogOpen, setSeedDialogOpen] = useState(false);
   const [bikeToDelete, setBikeToDelete] = useState<bigint | null>(null);
 
   const handleEdit = (bike: Bike) => {
@@ -62,6 +66,15 @@ export default function ManageBikesPage() {
     }
   };
 
+  const handleSeedClick = () => {
+    setSeedDialogOpen(true);
+  };
+
+  const handleSeedConfirm = async () => {
+    await seedBikes.mutateAsync();
+    setSeedDialogOpen(false);
+  };
+
   return (
     <RequireAuthAction action="manage bikes">
       <div className="container py-12">
@@ -75,10 +88,23 @@ export default function ManageBikesPage() {
               </p>
             </div>
             {!showForm && (
-              <Button onClick={handleCreate} className="gap-2">
-                <PlusCircle className="h-4 w-4" />
-                Create New Bike
-              </Button>
+              <div className="flex gap-2">
+                {isAdmin && (
+                  <Button
+                    onClick={handleSeedClick}
+                    variant="outline"
+                    className="gap-2"
+                    disabled={seedBikes.isPending}
+                  >
+                    <Database className="h-4 w-4" />
+                    {seedBikes.isPending ? 'Seeding...' : 'Seed Sample Bikes'}
+                  </Button>
+                )}
+                <Button onClick={handleCreate} className="gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Create New Bike
+                </Button>
+              </div>
             )}
           </div>
 
@@ -110,51 +136,61 @@ export default function ManageBikesPage() {
                       <div className="aspect-video relative bg-muted">
                         <img
                           src={
-                            bike.images && bike.images.length > 0
+                            bike.images.length > 0
                               ? bike.images[0]
-                              : '/assets/generated/bike-placeholder.dim_1200x800.png'
+                              : '/assets/bike-placeholder.dim_1200x800.png'
                           }
-                          alt={`${bike.brand} ${bike.name}`}
+                          alt={bike.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/assets/generated/bike-placeholder.dim_1200x800.png';
-                          }}
                         />
                       </div>
-                      <CardHeader>
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-2">
-                            <CardTitle className="line-clamp-1">
-                              {bike.brand} {bike.name}
-                            </CardTitle>
-                            <Badge variant="outline">{regionLabels[bike.region] || bike.region}</Badge>
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          <div>
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <h3 className="text-xl font-bold">{bike.name}</h3>
+                                <p className="text-sm text-muted-foreground">{bike.brand}</p>
+                              </div>
+                              <Badge variant="outline">{regionLabels[bike.region]}</Badge>
+                            </div>
                           </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                          {bike.specs || 'No specifications available'}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(bike)}
-                            className="gap-2"
-                          >
-                            <Edit className="h-4 w-4" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteClick(bike.id)}
-                            className="gap-2 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </Button>
+
+                          <div className="space-y-2">
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">Specs</p>
+                              <p className="text-sm">{bike.specs}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">Price Range</p>
+                              <p className="text-sm">
+                                ${bike.priceRange.min.toLocaleString()} - $
+                                {bike.priceRange.max.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(bike)}
+                              className="flex-1 gap-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteClick(bike.id)}
+                              className="flex-1 gap-2"
+                              disabled={deleteBike.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -162,9 +198,9 @@ export default function ManageBikesPage() {
                 </div>
               ) : (
                 <Card>
-                  <CardContent className="py-12 text-center space-y-4">
+                  <CardContent className="py-12 text-center">
                     <p className="text-muted-foreground">
-                      You haven't created any bikes yet. Click "Create New Bike" to get started.
+                      No bikes yet. Create your first bike to get started.
                     </p>
                   </CardContent>
                 </Card>
@@ -178,15 +214,40 @@ export default function ManageBikesPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Bike</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the bike from the system.
+              Are you sure you want to delete this bike? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogCancel disabled={deleteBike.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteBike.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteBike.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Seed Sample Bikes Confirmation Dialog */}
+      <AlertDialog open={seedDialogOpen} onOpenChange={setSeedDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Seed Sample Bikes</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will add a predefined set of popular motorcycle models to the database. This action is safe to run multiple times as duplicate entries will be handled automatically.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={seedBikes.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSeedConfirm}
+              disabled={seedBikes.isPending}
+            >
+              {seedBikes.isPending ? 'Adding Bikes...' : 'Confirm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

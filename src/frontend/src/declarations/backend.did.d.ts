@@ -129,6 +129,7 @@ export interface _SERVICE {
   'publishReview' : ActorMethod<[bigint], undefined>,
   'rateReview' : ActorMethod<[bigint, number], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'seedPopularBikeEntries' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

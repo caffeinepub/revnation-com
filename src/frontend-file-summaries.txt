@@ -23,7 +23,7 @@
   "frontend/src/components/BikeSelector.tsx": "Searchable combobox component for selecting bikes using Command component with popover interface.",
   "frontend/src/components/ComparisonTable.tsx": "Table component displaying side-by-side bike specifications and review scores with highlighting for better values.",
   "frontend/src/pages/SearchResultsPage.tsx": "Search results page displaying filtered articles, reviews, and bikes with dedicated matching brands section and bike results linking to bike detail pages with properly typed route params.",
-  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including bike CRUD (create/edit/delete/getBikeById/getUserBikes), draft management, comments, ratings, and user profiles with proper cache invalidation and toast notifications.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including bike CRUD, draft management, comments, ratings, user profiles, and new admin-only sample bike seeding mutation with proper cache invalidation and toast notifications.",
   "frontend/src/hooks/useCurrentUser.ts": "Custom hook combining authentication state, user profile, and admin status for easy access across components.",
   "frontend/src/index.css": "Global styles with OKLCH color system defining metallic/neutral palette for light mode and deep metallic with warm accents for dark mode, avoiding blue/purple dominance.",
   "frontend/index.html": "HTML entry point with updated document title \"RevNation — Global Motorcycle News & Reviews\".",
@@ -31,7 +31,7 @@
   "frontend/src/pages/CreateReviewPage.tsx": "Create Review page with RequireAuthAction wrapper, form for title/content/author/bike/region/score fields using BikeSelector (with correct onSelect prop) and Slider components, and two explicit actions using ContentStatus enum: \"Save Draft\" (navigates to drafts list) and \"Publish\" (navigates to review detail page).",
   "frontend/src/pages/MyDraftsPage.tsx": "Authenticated-only page displaying user's draft articles and reviews with status badges, preview links, and publish actions that invalidate both draft and public queries on success.",
   "frontend/src/pages/BikeDetailPage.tsx": "Bike detail page displaying brand/name, image gallery with placeholder fallback, pricing section, specifications, and details with loading and not-found states.",
-  "frontend/src/pages/ManageBikesPage.tsx": "Authenticated bike management page with create/edit/delete functionality, user bike list display, and confirmation dialog for deletions.",
+  "frontend/src/pages/ManageBikesPage.tsx": "Authenticated bike management page with create/edit/delete functionality, user bike list display, admin-only \"Seed Sample Bikes\" button with confirmation dialog, and proper authorization checks.",
   "frontend/src/components/BikeForm.tsx": "Reusable bike create/edit form component handling all bike fields including structured price range, images list as text, specs, details, and region selection using Region enum from backend.",
   "frontend/src/pages/BrandsPage.tsx": "Brands index page displaying de-duplicated brand list derived from bikes with search/filter functionality and bike count per brand.",
   "frontend/src/pages/BrandDetailPage.tsx": "Brand detail page showing all bikes for a selected brand with links to individual bike detail pages and pricing display."
