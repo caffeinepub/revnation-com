@@ -1,0 +1,135 @@
+{
+  "kind": "build_request",
+  "title": "Add bike detail pages, bike management panels, and brand browsing/search",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-22",
+      "text": "Extend the backend Bike data model to support richer bike information, including: (a) structured price fields, (b) a list of image references, and (c) a long-form details field; and expose query/update methods needed by the frontend to create, edit, and delete bikes.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Now create panels and pages for bike specs, prices, images, details, and even search by brands, too."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Bike records stored in the canister include fields for price, images (multiple), and details in addition to existing name/brand/specs/region.",
+        "Backend provides authenticated create and update operations for bikes (only signed-in users can create/update; only creator or admin can delete).",
+        "Backend continues to provide a public read operation to fetch bikes for browsing/search/detail pages.",
+        "Existing review/compare flows that rely on bikes continue to compile and function (updated for any Bike type changes)."
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "text": "Add a conditional backend state migration so existing deployed state can be upgraded safely to the new Bike schema with sensible defaults for any newly added fields.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Now create panels and pages for bike specs, prices, images, details, and even search by brands, too."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Upgrade does not trap when bikes already exist in stable state.",
+        "Existing bikes receive default values for new Bike fields after upgrade (e.g., empty image list, empty details, default/unknown price fields)."
+      ]
+    },
+    {
+      "id": "REQ-24",
+      "text": "Add a dedicated Bike Detail page and route that displays a bike’s images, pricing, specs, and detailed description, with clear empty/placeholder states when data is missing.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Now create panels and pages for bike specs, prices, images, details, and even search by brands, too."
+        ]
+      },
+      "acceptanceCriteria": [
+        "A new route exists for viewing an individual bike (e.g., /bike/$bikeId) and renders a bike detail page.",
+        "The page shows: brand + name, price section, image gallery (or placeholder), specs section, and details section.",
+        "If a bike ID does not exist, the page shows a not-found state with a navigation option back to browsing.",
+        "All user-facing text is in English."
+      ]
+    },
+    {
+      "id": "REQ-25",
+      "text": "Create authenticated bike management panels/pages that let signed-in users create and edit bikes (including specs, prices, images, and details) and delete bikes they own; unauthenticated users must not see these controls (or must be prompted to sign in).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Now create panels and pages for bike specs, prices, images, details, and even search by brands, too."
+        ]
+      },
+      "acceptanceCriteria": [
+        "There is at least one dedicated page for bike management accessible from the UI when authenticated (e.g., “Manage Bikes”).",
+        "The bike management UI supports: create new bike, edit existing bike fields (specs, price, images list, details), and delete a bike (with confirmation).",
+        "Unauthenticated users cannot access bike-create/edit/delete actions (UI hides the actions or shows a sign-in prompt via the existing auth-gating patterns).",
+        "Successful create/edit/delete actions provide an English success toast/feedback and the bike lists update without a manual refresh."
+      ]
+    },
+    {
+      "id": "REQ-26",
+      "text": "Extend the React Query data layer to include bike mutations (create/update/delete) and ensure query invalidation keeps bike listings, bike detail pages, and brand pages consistent.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Now create panels and pages for bike specs, prices, images, details, and even search by brands, too."
+        ]
+      },
+      "acceptanceCriteria": [
+        "New React Query hooks exist for bike create/update/delete operations and call the corresponding backend methods.",
+        "On mutation success, relevant queries (at minimum ['bikes']) are invalidated so the UI reflects updates immediately.",
+        "On unauthorized errors, the UI shows an English error message indicating the user must be signed in."
+      ]
+    },
+    {
+      "id": "REQ-27",
+      "text": "Add brand-based browsing and search UX: provide a Brands page (brand list) and Brand detail page (bikes filtered by brand), and update the existing search results behavior so bike results link to Bike Detail pages and brand matches are discoverable.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Now create panels and pages for bike specs, prices, images, details, and even search by brands, too."
+        ]
+      },
+      "acceptanceCriteria": [
+        "A Brands index page exists that lists brands derived from existing bikes and supports searching/filtering the brand list.",
+        "A Brand detail page exists that shows bikes for the selected brand, with links to each bike’s detail page.",
+        "The global navigation includes an entry point to the Brands page.",
+        "In Search Results, Bike results link to the Bike Detail route (not the Compare page).",
+        "Brand terms entered in search return relevant bikes (at minimum matching against bike.brand as currently implemented)."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor with all logic in backend/main.mo; add backend/migration.mo only as required for upgrading existing state.",
+    "Do not edit any frontend files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
+    "Bike images must be represented as static asset paths/URLs stored as text (no file upload backend)."
+  ],
+  "nonGoals": [
+    "Implementing real image upload/storage pipelines (multipart upload, blob storage, chunking).",
+    "Integrating third-party motorcycle data providers or external databases.",
+    "Adding payments or e-commerce checkout for bike pricing."
+  ],
+  "imageRequirements": {
+    "required": [
+      "Neutral motorcycle silhouette placeholder image on a transparent or subtle neutral background (bike-placeholder.dim_1200x800.png)"
+    ],
+    "edits": []
+  }
+}

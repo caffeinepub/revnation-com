@@ -1,0 +1,89 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-a-dedicated-bike-detail-page-and-route-that-displays-a-bike-s-images-pricing-specs-and-detailed-description-with-clear-empty-placeholder-states-when-data-is-missing",
+      "featureTitle": "Add a dedicated Bike Detail page and route that displays a bike’s images, pricing, specs, and detailed description, with clear empty/placeholder states when data is missing.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/BikeDetailPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-24"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-authenticated-bike-management-panels-pages-that-let-signed-in-users-create-and-edit-bikes-including-specs-prices-images-and-details-and-delete-bikes-they-own-unauthenticated-users-must-not-see-these-controls-or-must-be-prompted-to-sign-in",
+      "featureTitle": "Create authenticated bike management panels/pages that let signed-in users create and edit bikes (including specs, prices, images, and details) and delete bikes they own; unauthenticated users must not see these controls (or must be prompted to sign in).",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AppHeader.tsx",
+        "frontend/src/components/BikeForm.tsx",
+        "frontend/src/pages/ManageBikesPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-25"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-extend-the-react-query-data-layer-to-include-bike-mutations-create-update-delete-and-ensure-query-invalidation-keeps-bike-listings-bike-detail-pages-and-brand-pages-consistent",
+      "featureTitle": "Extend the React Query data layer to include bike mutations (create/update/delete) and ensure query invalidation keeps bike listings, bike detail pages, and brand pages consistent.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-26"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-brand-based-browsing-and-search-ux-provide-a-brands-page-brand-list-and-brand-detail-page-bikes-filtered-by-brand-and-update-the-existing-search-results-behavior-so-bike-results-link-to-bike-detail-pages-and-brand-matches-are-discoverable",
+      "featureTitle": "Add brand-based browsing and search UX: provide a Brands page (brand list) and Brand detail page (bikes filtered by brand), and update the existing search results behavior so bike results link to Bike Detail pages and brand matches are discoverable.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AppHeader.tsx",
+        "frontend/src/pages/BrandDetailPage.tsx",
+        "frontend/src/pages/BrandsPage.tsx",
+        "frontend/src/pages/SearchResultsPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-27"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-11T14:22:21.850Z",
+  "summary": "Frontend pages/routes for bike detail, brands index/detail, and a manage-bikes page were added, along with a BikeForm and search UX that surfaces matching brands. Backend Bike type was extended with priceRange/images/details and a migration module was added and wired via a conditional migration clause. However, the diff summary does not provide evidence that the backend exposes the required authenticated bike CRUD methods (create/update/delete + ownership/admin checks) or that the required placeholder image asset was added.",
+  "missing_requirements": [
+    {
+      "id": "REQ-22",
+      "requirement": "Expose authenticated backend methods to create/update bikes (signed-in only) and delete bikes (creator or admin only), plus public read methods for browsing/search/detail pages; keep existing review/compare flows compiling with Bike type changes.",
+      "reason": "The diff shows the Bike type extended (priceRange/images/details) but does not show any new or updated bike CRUD/query methods nor the required authorization/ownership checks for delete. The backend/main.mo snippet is truncated before any bike-related methods are shown.",
+      "evidence": [
+        "backend/main.mo (truncated; shows updated Bike type and authorization mixin, but no bike CRUD/read methods in provided excerpt)"
+      ]
+    },
+    {
+      "id": "REQ-24",
+      "requirement": "Add the required neutral motorcycle silhouette placeholder image asset: bike-placeholder.dim_1200x800.png.",
+      "reason": "Frontend pages reference `/assets/generated/bike-placeholder.dim_1200x800.png`, but the diff summary does not show any added static asset file with that name.",
+      "evidence": [
+        "frontend/src/pages/BikeDetailPage.tsx (references /assets/generated/bike-placeholder.dim_1200x800.png)",
+        "frontend/src/pages/BrandDetailPage.tsx (references placeholder path; truncated)",
+        "frontend/src/pages/ManageBikesPage.tsx (references /assets/generated/bike-placeholder.dim_1200x800.png)"
+      ]
+    }
+  ],
+  "hallucinated_features": [],
+  "confidence": 0.62,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/App.tsx",
+    "frontend/src/components/AppHeader.tsx",
+    "frontend/src/components/BikeForm.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/BikeDetailPage.tsx",
+    "frontend/src/pages/BrandDetailPage.tsx",
+    "frontend/src/pages/BrandsPage.tsx",
+    "frontend/src/pages/ManageBikesPage.tsx",
+    "frontend/src/pages/SearchResultsPage.tsx",
+    "project_state.json"
+  ]
+}
