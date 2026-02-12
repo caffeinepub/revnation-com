@@ -1,61 +1,67 @@
 {
   "kind": "build_request",
-  "title": "Fix Markdown price parsing and enable editing existing color swatches",
+  "title": "Fix Create Bike submission and remove global palette bar (keep BikeForm palette)",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix Markdown table ingestion so MSRP/price values are detected and auto-filled even when the left-column label contains extra text (e.g., \"MSRP (Global Est.)\"). The parser must successfully extract the currency range from values like \"$19,500 – $21,000 USD\" and populate the existing min/max price fields.",
-      "target": "frontend",
+      "text": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
+      "target": "both",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "when i add the markdown table its not filling the prices",
-          "| MSRP (Global Est.) | $19,500 – $21,000 USD |"
+          "when adding all the details, then i click on create bike it saying action not available.",
+          "“action not available” after clicking Create Bike. simple the bike should be created. it submit the form and create a new bike entry in your system."
         ]
       },
       "acceptanceCriteria": [
-        "Pasting the provided Markdown table into the BikeForm \"Paste Specs\" area and clicking Apply sets both Min Price and Max Price based on the MSRP row.",
-        "The MSRP row is detected when the key includes text like \"MSRP (Global Est.)\" (i.e., matching is not limited to exact equality with \"msrp\").",
-        "Price extraction works with commas, currency symbols, en-dashes/em-dashes, and trailing currency codes (e.g., USD).",
-        "If no price row is present, existing price inputs remain unchanged."
+        "As an authenticated user on /manage-bikes, filling out the Create New Bike form and submitting results in a successful backend createBike call and returns a bike id.",
+        "After successful creation, the Manage Bikes list refreshes and includes the newly created bike without requiring a manual page refresh.",
+        "If creation fails (e.g., unauthorized or actor not ready), the UI shows a clear error message explaining the cause (not a generic “action not available”) and does not close the form."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Allow users to edit an existing per-section color palette after creation by clicking an existing color swatch and updating it to a new hex color value (instead of the palette becoming locked/uneditable).",
+      "text": "Remove the color-palette detection bar/UI element from the top of the website (global header/top-of-page area), while keeping the AI palette functionality inside the bike creation/edit form (BikeForm) unchanged and available.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "users be able to click an existing colour swatch and edit it",
-          "the pallets are getting locked when coluir are added"
+          "and remove the palette from the top of the website.",
+          "The colour-palette detection bar we previously added, but don't need to remove the AI palette we have on the bike form."
         ]
       },
       "acceptanceCriteria": [
-        "On the Section Palettes page, clicking an existing displayed palette color opens an edit UI (e.g., dialog/popover) that lets the user enter/select a new hex color.",
-        "Saving the edit replaces only the clicked color entry in that section’s palette (no unintended regeneration of the palette).",
-        "Edited values are validated/normalized to a 6-digit hex code (consistent with existing validation behavior).",
-        "The existing remove-color control continues to work for each palette color."
+        "No palette detection bar or palette-related UI is visible in the site-wide header/top-of-page area across pages.",
+        "The BikeForm still shows its palette-related functionality (no regression in the bike form palette UI/features)."
       ]
     }
   ],
   "constraints": [
-    "Use English for any user-facing text.",
-    "Do not modify files under frontend/src/components/ui or any other frontend immutable paths listed in SYSTEM_CONTEXT.",
-    "Keep all backend logic in backend/main.mo; do not introduce additional backend services."
+    "Frontend must not modify files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
+    "Backend changes must remain within the single Motoko actor (backend/main.mo); only add backend/migration.mo if an actual state migration is required."
   ],
   "nonGoals": [
+    "Do not remove or redesign the AI palette feature within the BikeForm.",
     "Do not add new authentication providers beyond Internet Identity.",
-    "Do not change the rule that palettes auto-generate only when a section is created (editing text should not automatically regenerate palettes).",
-    "Do not introduce external databases or third-party APIs."
+    "Do not add new bike-related features beyond fixing the create submission and removing the global palette bar."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

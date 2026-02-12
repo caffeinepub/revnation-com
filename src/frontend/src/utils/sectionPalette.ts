@@ -50,8 +50,8 @@ export function extractHexColors(text: string): string[] {
   const hexPattern = /#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})\b/g;
   const matches = text.match(hexPattern) || [];
   
-  // Normalize 3-digit hex to 6-digit
-  return matches.map(hex => {
+  // Normalize 3-digit hex to 6-digit and deduplicate
+  const normalized = matches.map(hex => {
     const cleaned = hex.toUpperCase();
     if (cleaned.length === 4) {
       // #RGB -> #RRGGBB
@@ -62,6 +62,8 @@ export function extractHexColors(text: string): string[] {
     }
     return cleaned;
   });
+  
+  return Array.from(new Set(normalized));
 }
 
 /**
@@ -82,7 +84,8 @@ export function extractColorNames(text: string): string[] {
     }
   }
   
-  return foundColors;
+  // Deduplicate
+  return Array.from(new Set(foundColors));
 }
 
 /**
@@ -167,4 +170,17 @@ export function validateHexColor(hex: string): string | null {
   }
   
   return withHash;
+}
+
+/**
+ * Get color name from hex code (reverse lookup)
+ */
+export function getColorNameFromHex(hex: string): string | null {
+  const normalized = hex.toUpperCase();
+  for (const [name, hexValue] of Object.entries(COLOR_NAMES)) {
+    if (hexValue === normalized) {
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+  }
+  return null;
 }

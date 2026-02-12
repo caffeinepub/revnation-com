@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Search, Menu, PlusCircle, FileText, Wrench, Globe, Palette } from 'lucide-react';
+import { Search, Menu, PlusCircle, FileText, Wrench, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -21,7 +21,6 @@ const categories = [
   { id: 'brands', label: 'Brands', path: '/brands' },
   { id: 'comparisons', label: 'Compare' },
   { id: 'buyingGuides', label: 'Buying Guides' },
-  { id: 'palettes', label: 'Palettes', path: '/section-palettes' },
 ];
 
 const regionOptions = [

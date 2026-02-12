@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T05:37:57.595Z",
+  "generatedAt": "2026-02-12T06:29:25.917Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,38 +12,42 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix Markdown table ingestion so MSRP/price values are detected and auto-filled even when the left-column label contains extra text (e.g., \"MSRP (Global Est.)\"). The parser must successfully extract the currency range from values like \"$19,500 – $21,000 USD\" and populate the existing min/max price fields.",
+        "summary": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/markdownSpecs.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/BikeForm.tsx",
+          "frontend/src/pages/ManageBikesPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/markdownSpecs.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/BikeForm.tsx",
+          "frontend/src/pages/ManageBikesPage.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Allow users to edit an existing per-section color palette after creation by clicking an existing color swatch and updating it to a new hex color value (instead of the palette becoming locked/uneditable).",
+        "summary": "Remove the color-palette detection bar/UI element from the top of the website (global header/top-of-page area), while keeping the AI palette functionality inside the bike creation/edit form (BikeForm) unchanged and available.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/PaletteSwatchEditDialog.tsx",
-          "frontend/src/pages/SectionPalettesPage.tsx"
+          "frontend/src/components/AppHeader.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/PaletteSwatchEditDialog.tsx",
-          "frontend/src/pages/SectionPalettesPage.tsx"
+          "frontend/src/components/AppHeader.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/PaletteSwatchEditDialog.tsx",
-    "frontend/src/pages/SectionPalettesPage.tsx",
-    "frontend/src/utils/markdownSpecs.ts",
+    "frontend/src/components/AppHeader.tsx",
+    "frontend/src/components/BikeForm.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/ManageBikesPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useCreateBike, useEditBike } from '../hooks/useQueries';
+import { useActor } from '../hooks/useActor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X, Upload, Plus, AlertCircle } from 'lucide-react';
+import { X, Upload, Plus, AlertCircle, Palette } from 'lucide-react';
 import type { Bike, ColorOption, ImageType } from '../backend';
 import { Region, ExternalBlob } from '../backend';
 import { toast } from 'sonner';
 import { parseMarkdownTableEnhanced, isMarkdownTable } from '../utils/markdownSpecs';
+import { extractHexColors, extractColorNames, validateHexColor } from '../utils/sectionPalette';
 
 interface BikeFormProps {
   bike?: Bike | null;
@@ -38,6 +40,7 @@ const regionOptions: { value: Region; label: string }[] = [
 ];
 
 export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
+  const { actor, isFetching: actorFetching } = useActor();
   const createBike = useCreateBike();
   const editBike = useEditBike();
   
@@ -54,6 +57,7 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
   const [newColorCode, setNewColorCode] = useState('#000000');
   const [brandLogo, setBrandLogo] = useState<ImageEntry | null>(null);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [formError, setFormError] = useState<string>('');
   
   // Paste Specs state
   const [pasteSpecsText, setPasteSpecsText] = useState('');
@@ -107,21 +111,20 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
     }
   }, [bike]);
 
-  const handlePasteSpecsApply = () => {
+  const handlePasteSpecsAutoParse = (pastedText: string) => {
     setPasteSpecsError('');
     
-    if (!pasteSpecsText.trim()) {
-      setPasteSpecsError('Please paste a Markdown table first');
+    if (!pastedText.trim()) {
       return;
     }
 
-    if (!isMarkdownTable(pasteSpecsText)) {
+    if (!isMarkdownTable(pastedText)) {
       setPasteSpecsError('The pasted text does not appear to be a valid Markdown table. Please check the format.');
       return;
     }
 
     try {
-      const parsed = parseMarkdownTableEnhanced(pasteSpecsText);
+      const parsed = parseMarkdownTableEnhanced(pastedText);
       
       // Apply specs text
       setSpecs(parsed.specsText);
@@ -134,28 +137,117 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
         setMaxPrice(parsed.maxPrice.toString());
       }
       
-      // Apply colors if present
-      if (parsed.colors && parsed.colors.length > 0) {
-        // Merge colors: add new ones that don't already exist (case-insensitive)
-        const existingColorNames = colorOptions.map(c => c.name.toLowerCase());
-        const newColors: ColorOptionForm[] = parsed.colors
-          .filter(colorName => !existingColorNames.includes(colorName.toLowerCase()))
-          .map(colorName => ({
-            name: colorName,
-            colorCode: '#000000', // Default color code
-            images: [], // Empty images list
-          }));
+      // Detect colors from the entire pasted text
+      const hexColors = extractHexColors(pastedText);
+      const namedColors = extractColorNames(pastedText);
+      
+      // Combine with colors from the Colors row
+      const allDetectedColors: Array<{ name: string; hex: string }> = [];
+      
+      // Add hex colors detected in text
+      hexColors.forEach(hex => {
+        allDetectedColors.push({ name: hex, hex });
+      });
+      
+      // Add named colors detected in text
+      namedColors.forEach(hex => {
+        // Try to find the color name from the mapping
+        const colorName = Object.entries({
+          red: '#FF0000', green: '#00FF00', blue: '#0000FF', yellow: '#FFFF00',
+          orange: '#FFA500', purple: '#800080', pink: '#FFC0CB', brown: '#A52A2A',
+          black: '#000000', white: '#FFFFFF', gray: '#808080', grey: '#808080',
+          cyan: '#00FFFF', magenta: '#FF00FF', lime: '#00FF00', maroon: '#800000',
+          navy: '#000080', olive: '#808000', teal: '#008080', aqua: '#00FFFF',
+          silver: '#C0C0C0', gold: '#FFD700', indigo: '#4B0082', violet: '#EE82EE',
+          turquoise: '#40E0D0', coral: '#FF7F50', salmon: '#FA8072', khaki: '#F0E68C',
+          crimson: '#DC143C', lavender: '#E6E6FA', beige: '#F5F5DC', ivory: '#FFFFF0',
+          tan: '#D2B48C', peach: '#FFDAB9', mint: '#98FF98', sky: '#87CEEB',
+          rose: '#FF007F', plum: '#DDA0DD',
+        }).find(([_, hexVal]) => hexVal === hex);
         
-        if (newColors.length > 0) {
-          setColorOptions([...colorOptions, ...newColors]);
+        allDetectedColors.push({ 
+          name: colorName ? colorName[0].charAt(0).toUpperCase() + colorName[0].slice(1) : hex, 
+          hex 
+        });
+      });
+      
+      // Add colors from the Colors row if present
+      if (parsed.colors && parsed.colors.length > 0) {
+        parsed.colors.forEach(colorName => {
+          // Check if it's a hex color
+          const validatedHex = validateHexColor(colorName);
+          if (validatedHex) {
+            allDetectedColors.push({ name: validatedHex, hex: validatedHex });
+          } else {
+            // It's a color name, use default black or try to map it
+            const lowerName = colorName.toLowerCase();
+            const knownColorHex = {
+              red: '#FF0000', green: '#00FF00', blue: '#0000FF', yellow: '#FFFF00',
+              orange: '#FFA500', purple: '#800080', pink: '#FFC0CB', brown: '#A52A2A',
+              black: '#000000', white: '#FFFFFF', gray: '#808080', grey: '#808080',
+              cyan: '#00FFFF', magenta: '#FF00FF', lime: '#00FF00', maroon: '#800000',
+              navy: '#000080', olive: '#808000', teal: '#008080', aqua: '#00FFFF',
+              silver: '#C0C0C0', gold: '#FFD700', indigo: '#4B0082', violet: '#EE82EE',
+              turquoise: '#40E0D0', coral: '#FF7F50', salmon: '#FA8072', khaki: '#F0E68C',
+              crimson: '#DC143C', lavender: '#E6E6FA', beige: '#F5F5DC', ivory: '#FFFFF0',
+              tan: '#D2B48C', peach: '#FFDAB9', mint: '#98FF98', sky: '#87CEEB',
+              rose: '#FF007F', plum: '#DDA0DD',
+            }[lowerName] || '#000000';
+            
+            allDetectedColors.push({ name: colorName, hex: knownColorHex });
+          }
+        });
+      }
+      
+      // Merge colors: add new ones that don't already exist
+      const existingColorNames = colorOptions.map(c => c.name.toLowerCase());
+      const existingColorHexes = colorOptions.map(c => c.colorCode.toUpperCase());
+      
+      const newColors: ColorOptionForm[] = [];
+      const seenNames = new Set<string>();
+      const seenHexes = new Set<string>();
+      
+      allDetectedColors.forEach(({ name, hex }) => {
+        const nameLower = name.toLowerCase();
+        const hexUpper = hex.toUpperCase();
+        
+        // Skip if already exists in current color options
+        if (existingColorNames.includes(nameLower) || existingColorHexes.includes(hexUpper)) {
+          return;
         }
+        
+        // Skip if already added in this batch (dedupe)
+        if (seenNames.has(nameLower) || seenHexes.has(hexUpper)) {
+          return;
+        }
+        
+        seenNames.add(nameLower);
+        seenHexes.add(hexUpper);
+        
+        newColors.push({
+          name,
+          colorCode: hex,
+          images: [],
+        });
+      });
+      
+      if (newColors.length > 0) {
+        setColorOptions([...colorOptions, ...newColors]);
       }
       
       setPasteSpecsText('');
-      toast.success('Specifications parsed and applied successfully');
+      toast.success('Specifications and colors parsed successfully');
     } catch (error: any) {
       setPasteSpecsError(error.message || 'Failed to parse Markdown table');
     }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    // Auto-parse on paste
+    setTimeout(() => {
+      handlePasteSpecsAutoParse(pastedText);
+    }, 0);
   };
 
   const handleMainImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -319,6 +411,13 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError('');
+
+    // Check if actor is ready
+    if (!actor || actorFetching) {
+      setFormError('Connection is not ready yet. Please wait a moment and try again.');
+      return;
+    }
 
     const priceRange = {
       min: BigInt(minPrice || '0'),
@@ -397,8 +496,16 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
         });
       }
       onSuccess();
-    } catch (error) {
-      // Error handling is done in the mutation hooks
+    } catch (error: any) {
+      // Set form-level error for display
+      const message = error.message || 'Failed to save bike';
+      if (message.includes('Unauthorized')) {
+        setFormError('You must be signed in to create or edit bikes.');
+      } else if (message.includes('connection') || message.includes('ready')) {
+        setFormError('Connection not ready. Please wait a moment and try again.');
+      } else {
+        setFormError(message);
+      }
     }
   };
 
@@ -416,6 +523,13 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {formError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{formError}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="brand">Brand *</Label>
@@ -423,7 +537,7 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
             id="brand"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            placeholder="e.g., Yamaha, Honda, Ducati"
+            placeholder="e.g., Yamaha"
             required
           />
         </div>
@@ -434,106 +548,10 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., YZF-R1, CBR1000RR"
+            placeholder="e.g., YZF-R1"
             required
           />
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="brandLogo">Brand Logo</Label>
-        <div className="space-y-3">
-          {brandLogo && getImagePreview(brandLogo) && (
-            <div className="relative w-24 h-24 rounded-lg border-2 border-border overflow-hidden bg-muted">
-              <img
-                src={getImagePreview(brandLogo)!}
-                alt="Brand logo"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                className="absolute top-1 right-1 h-6 w-6"
-                onClick={() => setBrandLogo(null)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
-          <div className="flex gap-2">
-            <div>
-              <Input
-                id="brandLogoUpload"
-                type="file"
-                accept="image/*"
-                onChange={handleBrandLogoUpload}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById('brandLogoUpload')?.click()}
-                disabled={!!uploadProgress.brandLogo}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {uploadProgress.brandLogo ? `Uploading ${uploadProgress.brandLogo}%` : 'Upload Logo'}
-              </Button>
-            </div>
-            <Input
-              placeholder="Or paste image URL"
-              value={brandLogo?.type === 'linked' ? brandLogo.linked || '' : ''}
-              onChange={(e) => handleBrandLogoLinkChange(e.target.value)}
-              className="flex-1"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Paste Specs Section */}
-      <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="pasteSpecs" className="text-base font-semibold">Paste Specs (Markdown Table)</Label>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Paste a Markdown table here to auto-fill specifications, price range, and color options. Example format:
-        </p>
-        <pre className="text-xs bg-background p-2 rounded border overflow-x-auto">
-{`| Category     | Details                    |
-| ------------ | -------------------------- |
-| MSRP         | $8,000 – $9,500            |
-| Engine       | 649cc parallel twin        |
-| Colors       | Lime Green, Matte Gray     |`}
-        </pre>
-        <Textarea
-          id="pasteSpecs"
-          value={pasteSpecsText}
-          onChange={(e) => {
-            setPasteSpecsText(e.target.value);
-            setPasteSpecsError('');
-          }}
-          placeholder="Paste your Markdown table here..."
-          rows={6}
-          className="font-mono text-sm"
-        />
-        {pasteSpecsError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{pasteSpecsError}</AlertDescription>
-          </Alert>
-        )}
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handlePasteSpecsApply}
-          disabled={!pasteSpecsText.trim()}
-        >
-          Parse & Apply to Specifications
-        </Button>
       </div>
 
       <div className="space-y-2">
@@ -542,53 +560,49 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
           id="specs"
           value={specs}
           onChange={(e) => setSpecs(e.target.value)}
-          placeholder="Engine, power, torque, weight, etc."
-          rows={4}
+          onPaste={handlePaste}
+          placeholder="e.g., 998cc, 200hp, 199kg (or paste a Markdown table)"
+          rows={3}
           required
         />
+        {pasteSpecsError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{pasteSpecsError}</AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="minPrice">Minimum Price (USD)</Label>
+          <Label htmlFor="minPrice">Min Price (USD) *</Label>
           <Input
             id="minPrice"
             type="number"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
-            placeholder="0"
-            min="0"
+            placeholder="e.g., 15000"
+            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="maxPrice">Maximum Price (USD)</Label>
+          <Label htmlFor="maxPrice">Max Price (USD) *</Label>
           <Input
             id="maxPrice"
             type="number"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
-            placeholder="0"
-            min="0"
+            placeholder="e.g., 18000"
+            required
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="details">Details</Label>
-        <Textarea
-          id="details"
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          placeholder="Additional details about the bike"
-          rows={3}
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="region">Region *</Label>
         <Select value={region} onValueChange={(value) => setRegion(value as Region)}>
-          <SelectTrigger id="region">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -602,200 +616,257 @@ export default function BikeForm({ bike, onSuccess, onCancel }: BikeFormProps) {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="details">Details</Label>
+        <Textarea
+          id="details"
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+          placeholder="Additional details about the bike..."
+          rows={4}
+        />
+      </div>
+
+      {/* Main Images */}
+      <div className="space-y-4">
         <Label>Main Images</Label>
-        <div className="space-y-3">
-          {mainImages.map((img, index) => (
-            <div key={index} className="flex gap-2 items-start">
-              {getImagePreview(img) && (
-                <div className="relative w-20 h-20 rounded border overflow-hidden bg-muted flex-shrink-0">
-                  <img
-                    src={getImagePreview(img)!}
-                    alt={`Main ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-              <div className="flex-1 flex gap-2">
-                <div>
-                  <Input
-                    id={`mainImage-${index}`}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleMainImageUpload(index, e)}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => document.getElementById(`mainImage-${index}`)?.click()}
-                    disabled={!!uploadProgress[`main-${index}`]}
-                  >
-                    <Upload className="h-3 w-3 mr-1" />
-                    {uploadProgress[`main-${index}`] ? `${uploadProgress[`main-${index}`]}%` : 'Upload'}
-                  </Button>
-                </div>
+        {mainImages.map((img, index) => (
+          <div key={index} className="flex gap-2 items-start p-4 border rounded-lg">
+            <div className="flex-1 space-y-2">
+              <div className="flex gap-2">
                 <Input
-                  placeholder="Or paste image URL"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleMainImageUpload(index, e)}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground self-center">or</span>
+                <Input
+                  type="url"
+                  placeholder="Image URL"
                   value={img.type === 'linked' ? img.linked || '' : ''}
                   onChange={(e) => handleMainImageLinkChange(index, e.target.value)}
                   className="flex-1"
                 />
+              </div>
+              {uploadProgress[`main-${index}`] !== undefined && (
+                <div className="text-sm text-muted-foreground">
+                  Uploading: {uploadProgress[`main-${index}`]}%
+                </div>
+              )}
+              {getImagePreview(img) && (
+                <img
+                  src={getImagePreview(img)!}
+                  alt={`Preview ${index + 1}`}
+                  className="w-32 h-32 object-cover rounded"
+                />
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => handleRemoveMainImage(index)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button type="button" variant="outline" onClick={handleAddImageSlot} className="w-full">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Image
+        </Button>
+      </div>
+
+      {/* Brand Logo */}
+      <div className="space-y-4">
+        <Label>Brand Logo (Optional)</Label>
+        {brandLogo ? (
+          <div className="flex gap-2 items-start p-4 border rounded-lg">
+            <div className="flex-1 space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBrandLogoUpload}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground self-center">or</span>
+                <Input
+                  type="url"
+                  placeholder="Logo URL"
+                  value={brandLogo.type === 'linked' ? brandLogo.linked || '' : ''}
+                  onChange={(e) => handleBrandLogoLinkChange(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+              {uploadProgress.brandLogo !== undefined && (
+                <div className="text-sm text-muted-foreground">
+                  Uploading: {uploadProgress.brandLogo}%
+                </div>
+              )}
+              {getImagePreview(brandLogo) && (
+                <img
+                  src={getImagePreview(brandLogo)!}
+                  alt="Brand logo preview"
+                  className="w-32 h-32 object-contain rounded bg-muted"
+                />
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setBrandLogo(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setBrandLogo({ type: 'linked', linked: '' })}
+            className="w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Brand Logo
+          </Button>
+        )}
+      </div>
+
+      {/* Color Options with Palette UI */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Palette className="h-5 w-5 text-primary" />
+          <Label className="text-lg font-semibold">Color Options</Label>
+        </div>
+        
+        {/* Display existing color swatches */}
+        {colorOptions.length > 0 && (
+          <div className="flex flex-wrap gap-3 p-4 bg-muted/30 rounded-lg border">
+            {colorOptions.map((color, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 px-3 py-2 bg-background rounded-md border shadow-sm"
+              >
+                <div
+                  className="w-6 h-6 rounded border-2 border-border shrink-0"
+                  style={{ backgroundColor: color.colorCode }}
+                  title={color.colorCode}
+                />
+                <span className="text-sm font-medium">{color.name}</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleRemoveMainImage(index)}
+                  className="h-6 w-6 ml-1"
+                  onClick={() => handleRemoveColor(index)}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3 w-3" />
                 </Button>
               </div>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddImageSlot}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Image Slot
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <Label className="text-base font-semibold">Color Options</Label>
-        
-        {colorOptions.map((color, colorIndex) => (
-          <div key={colorIndex} className="p-4 border rounded-lg space-y-3 bg-muted/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded border-2 border-border"
-                  style={{ backgroundColor: color.colorCode }}
-                />
-                <div>
-                  <p className="font-medium">{color.name}</p>
-                  <p className="text-xs text-muted-foreground">{color.colorCode}</p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => handleRemoveColor(colorIndex)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm">Images for {color.name}</Label>
-              {color.images.map((img, imageIndex) => (
-                <div key={imageIndex} className="flex gap-2 items-start">
-                  {getImagePreview(img) && (
-                    <div className="relative w-16 h-16 rounded border overflow-hidden bg-muted flex-shrink-0">
-                      <img
-                        src={getImagePreview(img)!}
-                        alt={`${color.name} ${imageIndex + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1 flex gap-2">
-                    <div>
-                      <Input
-                        id={`colorImage-${colorIndex}-${imageIndex}`}
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleColorImageUpload(colorIndex, imageIndex, e)}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => document.getElementById(`colorImage-${colorIndex}-${imageIndex}`)?.click()}
-                        disabled={!!uploadProgress[`color-${colorIndex}-${imageIndex}`]}
-                      >
-                        <Upload className="h-3 w-3 mr-1" />
-                        {uploadProgress[`color-${colorIndex}-${imageIndex}`] ? `${uploadProgress[`color-${colorIndex}-${imageIndex}`]}%` : 'Upload'}
-                      </Button>
-                    </div>
-                    <Input
-                      placeholder="Or paste image URL"
-                      value={img.type === 'linked' ? img.linked || '' : ''}
-                      onChange={(e) => handleColorImageLinkChange(colorIndex, imageIndex, e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveColorImage(colorIndex, imageIndex)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleAddColorImageSlot(colorIndex)}
-              >
-                <Plus className="h-3 w-3 mr-2" />
-                Add Image
-              </Button>
-            </div>
+            ))}
           </div>
-        ))}
+        )}
 
-        <div className="flex gap-2">
-          <Input
-            placeholder="Color name"
-            value={newColorName}
-            onChange={(e) => setNewColorName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleAddColor();
-              }
-            }}
-          />
-          <Input
-            type="color"
-            value={newColorCode}
-            onChange={(e) => setNewColorCode(e.target.value)}
-            className="w-20"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddColor}
-            disabled={!newColorName.trim()}
-          >
+        {/* Add new color */}
+        <div className="flex gap-2 items-end">
+          <div className="flex-1 space-y-2">
+            <Label htmlFor="newColorName">Color Name</Label>
+            <Input
+              id="newColorName"
+              value={newColorName}
+              onChange={(e) => setNewColorName(e.target.value)}
+              placeholder="e.g., Racing Blue"
+            />
+          </div>
+          <div className="w-32 space-y-2">
+            <Label htmlFor="newColorCode">Hex Code</Label>
+            <Input
+              id="newColorCode"
+              type="color"
+              value={newColorCode}
+              onChange={(e) => setNewColorCode(e.target.value)}
+              className="h-10"
+            />
+          </div>
+          <Button type="button" onClick={handleAddColor} disabled={!newColorName.trim()}>
             <Plus className="h-4 w-4 mr-2" />
             Add Color
           </Button>
         </div>
+
+        {/* Color images */}
+        {colorOptions.map((color, colorIndex) => (
+          <div key={colorIndex} className="space-y-2 p-4 border rounded-lg bg-muted/20">
+            <div className="flex items-center gap-2">
+              <div
+                className="w-5 h-5 rounded border"
+                style={{ backgroundColor: color.colorCode }}
+              />
+              <Label className="font-medium">{color.name} - Images</Label>
+            </div>
+            {color.images.map((img, imageIndex) => (
+              <div key={imageIndex} className="flex gap-2 items-start pl-7">
+                <div className="flex-1 space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleColorImageUpload(colorIndex, imageIndex, e)}
+                      className="flex-1"
+                    />
+                    <span className="text-sm text-muted-foreground self-center">or</span>
+                    <Input
+                      type="url"
+                      placeholder="Image URL"
+                      value={img.type === 'linked' ? img.linked || '' : ''}
+                      onChange={(e) => handleColorImageLinkChange(colorIndex, imageIndex, e.target.value)}
+                      className="flex-1"
+                    />
+                  </div>
+                  {uploadProgress[`color-${colorIndex}-${imageIndex}`] !== undefined && (
+                    <div className="text-sm text-muted-foreground">
+                      Uploading: {uploadProgress[`color-${colorIndex}-${imageIndex}`]}%
+                    </div>
+                  )}
+                  {getImagePreview(img) && (
+                    <img
+                      src={getImagePreview(img)!}
+                      alt={`${color.name} preview ${imageIndex + 1}`}
+                      className="w-32 h-32 object-cover rounded"
+                    />
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemoveColorImage(colorIndex, imageIndex)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleAddColorImageSlot(colorIndex)}
+              className="ml-7"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Image for {color.name}
+            </Button>
+          </div>
+        ))}
       </div>
 
-      <div className="flex gap-3 pt-4">
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
-          {isSubmitting ? 'Saving...' : bike ? 'Update Bike' : 'Create Bike'}
+      <div className="flex gap-4 pt-4">
+        <Button type="submit" disabled={isSubmitting || !actor || actorFetching} className="flex-1">
+          {isSubmitting ? (bike ? 'Updating...' : 'Creating...') : (bike ? 'Update Bike' : 'Create Bike')}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
       </div>

@@ -1,44 +1,46 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Markdown MSRP parsing and enable editing section palette swatches",
+  "title": "Fix Create Bike submission reliability and remove global palette header UI",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Make Markdown table ingestion detect MSRP/price rows with non-exact labels and reliably extract min/max prices from common currency range formats.",
+      "summary": "Make Create Bike submission reliably call createBike, show actionable errors, and refresh Manage Bikes list to include the new bike.",
       "acceptanceCriteria": [
-        "Pasting the provided Markdown table into the BikeForm \"Paste Specs\" area and clicking Apply sets both Min Price and Max Price based on the MSRP row.",
-        "The MSRP row is detected when the key includes text like \"MSRP (Global Est.)\" (i.e., matching is not limited to exact equality with \"msrp\").",
-        "Price extraction works with commas, currency symbols, en-dashes/em-dashes, and trailing currency codes (e.g., USD).",
-        "If no price row is present, existing price inputs remain unchanged."
+        "As an authenticated user on /manage-bikes, filling out the Create New Bike form and submitting results in a successful backend createBike call and returns a bike id.",
+        "After successful creation, the Manage Bikes list refreshes and includes the newly created bike without requiring a manual page refresh.",
+        "If creation fails (e.g., unauthorized or actor not ready), the UI shows a clear error message explaining the cause (not a generic “action not available”) and does not close the form."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/markdownSpecs.ts",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Update MSRP/price row detection to use robust matching (e.g., key normalization + substring/keyword checks) so labels like \"MSRP (Global Est.)\" are recognized; strengthen price parsing to tolerate trailing currency codes and dash variants while still returning correct numeric min/max for ranges like \"$19,500 – $21,000 USD\"."
+          "description": "Harden the bike create mutation: ensure failures are surfaced with clear, user-actionable messages (e.g., distinguish unauthorized vs actor not available/initializing vs other errors) and ensure cache invalidation for the Manage Bikes list happens reliably after a successful create. Use the authorization component’s frontend guidance to handle authentication-dependent data access and error handling gracefully. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/BikeForm.tsx",
+          "operation": "modify",
+          "description": "Update the Create Bike submit handling to (1) await the create mutation result (bike id) for success confirmation, (2) keep the form open on failure, and (3) render a clear inline error message on failures such as unauthorized or actor not ready (instead of generic copy). Maintain existing in-form palette functionality unchanged. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/ManageBikesPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the Manage Bikes list reflects newly created bikes immediately after form success (e.g., by explicitly triggering a refetch/invalidation of the user bike list when the form closes on success, guarding against any race with query invalidation). Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Enable editing an existing section palette swatch by clicking it and updating its hex value without regenerating the palette.",
+      "summary": "Remove the palette detection bar/UI from the global header while keeping BikeForm palette features intact.",
       "acceptanceCriteria": [
-        "On the Section Palettes page, clicking an existing displayed palette color opens an edit UI (e.g., dialog/popover) that lets the user enter/select a new hex color.",
-        "Saving the edit replaces only the clicked color entry in that section’s palette (no unintended regeneration of the palette).",
-        "Edited values are validated/normalized to a 6-digit hex code (consistent with existing validation behavior).",
-        "The existing remove-color control continues to work for each palette color."
+        "No palette detection bar or palette-related UI is visible in the site-wide header/top-of-page area across pages.",
+        "The BikeForm still shows its palette-related functionality (no regression in the bike form palette UI/features)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/PaletteSwatchEditDialog.tsx",
-          "operation": "create",
-          "description": "Create a reusable edit dialog component for updating a single palette color using shadcn-ui dialog/input/button building blocks (verify the component's usage instructions before implementing). The component should accept current color, handle hex input, call existing validateHexColor for normalization, and return the updated color on save."
-        },
-        {
-          "path": "frontend/src/pages/SectionPalettesPage.tsx",
+          "path": "frontend/src/components/AppHeader.tsx",
           "operation": "modify",
-          "description": "Wire swatch click to open the new PaletteSwatchEditDialog, track which section/color is being edited, and on save replace only the clicked color value in that section’s palette array (no palette regeneration). Ensure the existing remove-color button still works by preventing click propagation from the remove control to the edit action."
+          "description": "Remove any palette detection bar / palette-related UI rendered in the global header/top-of-page area (including related icons, controls, state, or components) while keeping normal navigation intact. Do not change BikeForm palette features. Verify the component's usage instructions before implementing."
         }
       ]
     }

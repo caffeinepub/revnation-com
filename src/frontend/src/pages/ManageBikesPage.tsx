@@ -9,6 +9,7 @@ import RequireAuthAction from '../components/RequireAuthAction';
 import BikeForm from '../components/BikeForm';
 import type { Bike } from '../backend';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +33,7 @@ export default function ManageBikesPage() {
   const { isAdmin } = useCurrentUser();
   const deleteBike = useDeleteBike();
   const seedBikes = useSeedSampleBikes();
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingBike, setEditingBike] = useState<Bike | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -51,6 +53,8 @@ export default function ManageBikesPage() {
   const handleFormClose = () => {
     setShowForm(false);
     setEditingBike(null);
+    // Explicitly refetch user bikes to ensure list is updated
+    queryClient.invalidateQueries({ queryKey: ['userBikes'] });
   };
 
   const handleDeleteClick = (bikeId: bigint) => {

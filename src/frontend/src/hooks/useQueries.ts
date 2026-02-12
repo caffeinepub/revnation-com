@@ -265,7 +265,9 @@ export function useCreateBike() {
       colorOptions: ColorOption[];
       brandLogo: ImageType | null;
     }) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) {
+        throw new Error('Please wait for the connection to be ready, then try again.');
+      }
       return actor.createBike(name, brand, specs, priceRange, mainImages, details, region, colorOptions, brandLogo);
     },
     onSuccess: () => {
@@ -277,6 +279,8 @@ export function useCreateBike() {
       const message = error.message || 'Failed to create bike';
       if (message.includes('Unauthorized')) {
         toast.error('You must be signed in to create bikes');
+      } else if (message.includes('connection') || message.includes('ready')) {
+        toast.error('Connection not ready. Please wait a moment and try again.');
       } else {
         toast.error(message);
       }
@@ -312,7 +316,9 @@ export function useEditBike() {
       colorOptions: ColorOption[];
       brandLogo: ImageType | null;
     }) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) {
+        throw new Error('Please wait for the connection to be ready, then try again.');
+      }
       return actor.editBike(bikeId, name, brand, specs, priceRange, mainImages, details, region, colorOptions, brandLogo);
     },
     onSuccess: () => {
@@ -322,7 +328,14 @@ export function useEditBike() {
       toast.success('Bike updated successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update bike');
+      const message = error.message || 'Failed to update bike';
+      if (message.includes('Unauthorized')) {
+        toast.error('You must be signed in to update bikes');
+      } else if (message.includes('connection') || message.includes('ready')) {
+        toast.error('Connection not ready. Please wait a moment and try again.');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }

@@ -1,25 +1,24 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "App that ingests a markdown table to auto-fill pricing fields and generates color palettes that users can edit via clickable swatches.",
+  "summary": "Bike management web app with a Create Bike form and a color-palette detection UI element (site header bar + bike-form palette).",
   "architectural_notes": [],
   "known_issues": [
-    "Markdown table paste does not auto-fill price/MSRP fields.",
-    "Color palette becomes locked after colors are added; users cannot edit existing swatches."
+    "Create Bike shows 'action not available' and does not create a bike entry when submitting the form."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-markdown-table-ingestion-so-msrp-price-values-are-detected-and-auto-filled-even-when-the-left-column-label-contains-extra-text-e-g-msrp-global-est-the-parser-must-successfully-extract-the-currency-range-from-values-like-19-500-21-000-usd-and-populate-the-existing-min-max-price-fields",
-      "title": "Fix Markdown table ingestion so MSRP/price values are detected and auto-filled even when the left-column label contains extra text (e.g., \"MSRP (Global Est.)\"). The parser must successfully extract the currency range from values like \"$19,500 – $21,000 USD\" and populate the existing min/max price fields.",
+      "id": "feature-fix-the-create-bike-flow-so-that-clicking-the-create-bike-submit-button-successfully-creates-a-new-bike-entry-and-the-new-bike-appears-in-the-user-s-bike-list-manage-bikes-page-instead-of-showing-an-action-not-available-error",
+      "title": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-allow-users-to-edit-an-existing-per-section-color-palette-after-creation-by-clicking-an-existing-color-swatch-and-updating-it-to-a-new-hex-color-value-instead-of-the-palette-becoming-locked-uneditable",
-      "title": "Allow users to edit an existing per-section color palette after creation by clicking an existing color swatch and updating it to a new hex color value (instead of the palette becoming locked/uneditable).",
+      "id": "feature-remove-the-color-palette-detection-bar-ui-element-from-the-top-of-the-website-global-header-top-of-page-area-while-keeping-the-ai-palette-functionality-inside-the-bike-creation-edit-form-bikeform-unchanged-and-available",
+      "title": "Remove the color-palette detection bar/UI element from the top of the website (global header/top-of-page area), while keeping the AI palette functionality inside the bike creation/edit form (BikeForm) unchanged and available.",
       "reqIds": [
         "REQ-2"
       ],
@@ -29,18 +28,18 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix markdown table ingestion so MSRP/price values are detected and auto-filled (e.g., parse currency ranges like \"$19,500 – $21,000 USD\").",
+      "summary": "Fix Create Bike: button should submit the form and successfully create a new bike entry (resolve 'action not available').",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Allow editing existing color palettes after creation by clicking a color swatch to modify it (remove/avoid palette locking).",
+      "summary": "Remove the color-palette detection bar from the top of the site, but keep the AI palette on the bike creation form.",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Fix Markdown price parsing and enable editing existing color swatches",
+  "projectName": "Fix Create Bike submission and remove global palette bar (keep BikeForm palette)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
