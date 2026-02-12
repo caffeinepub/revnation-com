@@ -1,4 +1,5 @@
 import React from 'react';
+import { sanitizeRichTextHTML } from '@/utils/richTextHtmlSanitizer';
 
 interface LongFormContentProps {
   content: string;
@@ -6,7 +7,22 @@ interface LongFormContentProps {
 }
 
 export default function LongFormContent({ content, className = '' }: LongFormContentProps) {
-  // Parse content and convert heading markers to actual HTML headings
+  // Check if content contains HTML tags (including images)
+  const hasHTMLTags = /<[^>]+>/.test(content);
+
+  // If content has HTML tags, render as sanitized HTML
+  if (hasHTMLTags) {
+    const sanitizedHTML = sanitizeRichTextHTML(content);
+    
+    return (
+      <div 
+        className={`prose prose-lg prose-neutral dark:prose-invert max-w-none ${className}`}
+        dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+      />
+    );
+  }
+
+  // Otherwise, parse content and convert heading markers to actual HTML headings
   const parseContent = (text: string) => {
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];

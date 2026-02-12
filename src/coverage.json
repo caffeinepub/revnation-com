@@ -1,90 +1,90 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T15:35:16.732Z",
+  "generatedAt": "2026-02-12T16:37:07.974Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 6,
-    "implemented": 3,
+    "total": 5,
+    "implemented": 5,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Extend the persisted document model so each saved document can store `contentType: \"news\" | \"review\"` and, when `contentType` is `\"review\"`, also store `pros`, `cons`, and `rating` alongside the document data (not editor-only UI state).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Update the existing rich-text editor implementation to use the Tiptap editor instance (keeping the existing RichTextEditor component API) and ensure the official Tiptap Image extension is enabled if it is not already present; do not install any libraries beyond the official Tiptap Image extension.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/RichTextEditor.tsx",
+          "frontend/package.json"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/RichTextEditor.tsx"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "Update backend create/save and fetch/query APIs for the relevant document type(s) so that `contentType`, `pros`, `cons`, and `rating` are persisted on save and returned on load, with defaults applied when fields are missing (default `contentType` to `news`, default `pros`/`cons` to empty arrays, default `rating` to 0).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Implement an image node schema that supports (a) a resize preset and (b) an optional caption stored within the editor document (not in a separate database field), with inline editing of the caption directly below the image.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+          "frontend/src/components/RichTextEditor.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+          "frontend/src/components/RichTextEditor.tsx"
+        ]
       },
       {
         "id": "REQ-3",
-        "summary": "Add/extend conditional Motoko migration logic to backfill existing stored documents so that upgrades do not lose data and older records receive default values for new fields (`contentType = #news` when missing; `pros = []`, `cons = []`, `rating = 0`).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Add a lightweight contextual image menu that appears when the user clicks/selects an image, offering three preset width options: Small, Medium, Full Width. Selecting an option applies CSS classes only: `img-small`, `img-medium`, `img-full`. Do not implement drag resizing.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/RichTextEditor.tsx",
+          "frontend/src/tiptap/extensions/ImageWithCaption.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/RichTextEditor.tsx",
+          "frontend/src/tiptap/extensions/ImageWithCaption.tsx"
+        ]
       },
       {
         "id": "REQ-4",
-        "summary": "In the document editor UI, provide a dropdown in the top toolbar with options `News` and `Review`, defaulting to `News`, and persist the selected value per document as `contentType: \"news\" | \"review\"`.",
+        "summary": "Ensure images have proper spacing above and below, and implement responsive mobile behavior so images render cleanly on narrow screens (lightweight CSS-based solution; no heavy runtime layout logic).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/CreateReviewPage.tsx"
+          "frontend/src/index.css",
+          "frontend/src/tiptap/extensions/ImageWithCaption.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/CreateReviewPage.tsx"
+          "frontend/src/index.css",
+          "frontend/src/tiptap/extensions/ImageWithCaption.tsx"
         ]
       },
       {
         "id": "REQ-5",
-        "summary": "When the selected `contentType` is `Review`, conditionally render three optional static fields outside the editor content area (no custom editor nodes): Pros (textarea), Cons (textarea), Rating (number input). Hide them when `contentType` is `News`. Render/hide immediately on dropdown change and also correctly when loading an existing document.",
+        "summary": "Update HTML sanitization used for rendering stored rich-text so that the image sizing classes and caption markup produced by the editor are preserved (while still sanitizing unsafe tags/attributes).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/CreateReviewPage.tsx"
+          "frontend/src/utils/richTextHtmlSanitizer.ts",
+          "frontend/src/components/LongFormContent.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/CreateReviewPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Persist the values of Pros, Cons, and Rating with the document on save, and restore them into the form on load. `pros` and `cons` must be stored as arrays; the UI must serialize/deserialize between the textarea representation and the array representation consistently.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/reviewFields.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreateReviewPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/reviewFields.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreateReviewPage.tsx"
+          "frontend/src/utils/richTextHtmlSanitizer.ts"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/CreateReviewPage.tsx",
-    "frontend/src/pages/ManageBikesPage.tsx",
-    "frontend/src/utils/reviewFields.ts",
+    "frontend/src/components/RichTextEditor.tsx",
+    "frontend/src/index.css",
+    "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+    "frontend/src/utils/richTextHtmlSanitizer.ts",
+    "frontend/src/utils/tiptapPasteSanitizer.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

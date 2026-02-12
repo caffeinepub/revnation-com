@@ -2,10 +2,73 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-the-document-editor-ui-provide-a-dropdown-in-the-top-toolbar-with-options-news-and-review-defaulting-to-news-and-persist-the-selected-value-per-document-as-contenttype-news-review",
-      "featureTitle": "In the document editor UI, provide a dropdown in the top toolbar with options `News` and `Review`, defaulting to `News`, and persist the selected value per document as `contentType: \"news\" | \"review\"`.",
+      "featureId": "feature-update-the-existing-rich-text-editor-implementation-to-use-the-tiptap-editor-instance-keeping-the-existing-richtexteditor-component-api-and-ensure-the-official-tiptap-image-extension-is-enabled-if-it-is-not-already-present-do-not-install-any-libraries-beyond-the-official-tiptap-image-extension",
+      "featureTitle": "Update the existing rich-text editor implementation to use the Tiptap editor instance (keeping the existing RichTextEditor component API) and ensure the official Tiptap Image extension is enabled if it is not already present; do not install any libraries beyond the official Tiptap Image extension.",
       "files": [
-        "frontend/src/pages/CreateReviewPage.tsx"
+        "frontend/src/components/RichTextEditor.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-an-image-node-schema-that-supports-a-a-resize-preset-and-b-an-optional-caption-stored-within-the-editor-document-not-in-a-separate-database-field-with-inline-editing-of-the-caption-directly-below-the-image",
+      "featureTitle": "Implement an image node schema that supports (a) a resize preset and (b) an optional caption stored within the editor document (not in a separate database field), with inline editing of the caption directly below the image.",
+      "files": [
+        "frontend/src/components/RichTextEditor.tsx",
+        "frontend/src/tiptap/extensions/ImageWithCaption.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-lightweight-contextual-image-menu-that-appears-when-the-user-clicks-selects-an-image-offering-three-preset-width-options-small-medium-full-width-selecting-an-option-applies-css-classes-only-img-small-img-medium-img-full-do-not-implement-drag-resizing",
+      "featureTitle": "Add a lightweight contextual image menu that appears when the user clicks/selects an image, offering three preset width options: Small, Medium, Full Width. Selecting an option applies CSS classes only: `img-small`, `img-medium`, `img-full`. Do not implement drag resizing.",
+      "files": [
+        "frontend/src/components/RichTextEditor.tsx",
+        "frontend/src/tiptap/extensions/ImageWithCaption.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-images-have-proper-spacing-above-and-below-and-implement-responsive-mobile-behavior-so-images-render-cleanly-on-narrow-screens-lightweight-css-based-solution-no-heavy-runtime-layout-logic",
+      "featureTitle": "Ensure images have proper spacing above and below, and implement responsive mobile behavior so images render cleanly on narrow screens (lightweight CSS-based solution; no heavy runtime layout logic).",
+      "files": [
+        "frontend/src/index.css",
+        "frontend/src/tiptap/extensions/ImageWithCaption.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -22,10 +85,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-when-the-selected-contenttype-is-review-conditionally-render-three-optional-static-fields-outside-the-editor-content-area-no-custom-editor-nodes-pros-textarea-cons-textarea-rating-number-input-hide-them-when-contenttype-is-news-render-hide-immediately-on-dropdown-change-and-also-correctly-when-loading-an-existing-document",
-      "featureTitle": "When the selected `contentType` is `Review`, conditionally render three optional static fields outside the editor content area (no custom editor nodes): Pros (textarea), Cons (textarea), Rating (number input). Hide them when `contentType` is `News`. Render/hide immediately on dropdown change and also correctly when loading an existing document.",
+      "featureId": "feature-update-html-sanitization-used-for-rendering-stored-rich-text-so-that-the-image-sizing-classes-and-caption-markup-produced-by-the-editor-are-preserved-while-still-sanitizing-unsafe-tags-attributes",
+      "featureTitle": "Update HTML sanitization used for rendering stored rich-text so that the image sizing classes and caption markup produced by the editor are preserved (while still sanitizing unsafe tags/attributes).",
       "files": [
-        "frontend/src/pages/CreateReviewPage.tsx"
+        "frontend/src/utils/richTextHtmlSanitizer.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -38,28 +101,6 @@
       ],
       "testIds": [
         "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-persist-the-values-of-pros-cons-and-rating-with-the-document-on-save-and-restore-them-into-the-form-on-load-pros-and-cons-must-be-stored-as-arrays-the-ui-must-serialize-deserialize-between-the-textarea-representation-and-the-array-representation-consistently",
-      "featureTitle": "Persist the values of Pros, Cons, and Rating with the document on save, and restore them into the form on load. `pros` and `cons` must be stored as arrays; the UI must serialize/deserialize between the textarea representation and the array representation consistently.",
-      "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CreateReviewPage.tsx",
-        "frontend/src/utils/reviewFields.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
       ],
       "confidence": "high"
     }

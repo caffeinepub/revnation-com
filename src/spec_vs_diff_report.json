@@ -1,62 +1,71 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T15:35:16.729Z",
-  "summary": "Diff adds backend fields/migration for review documents (contentType, pros/cons arrays, rating) and introduces frontend utilities plus CreateReviewPage UI/state to capture and save these fields. However, the requested editor-toolbar dropdown and robust load/restore behavior for existing documents are not evidenced, and some added logic (rating normalization/clamping) goes beyond stated requirements.",
+  "generatedAt": "2026-02-12T16:37:07.970Z",
+  "summary": "Diff adds custom contenteditable-based image wrapper/caption styling and expands HTML sanitization to preserve image sizing/caption classes. However, the requested migration to a Tiptap editor instance and use of the official Tiptap Image extension is not evidenced, and several acceptance criteria around schema-based persistence (size + caption as node attrs) are not verifiable from the truncated diff.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Ensure backend create/save and fetch/query APIs persist and return contentType/pros/cons/rating with safe defaults when missing (news / [] / [] / 0).",
-      "reason": "The diff shows type changes and a migration, but does not show the actual backend API functions (create/save/fetch/query) being updated to apply defaults on read/write for older records (or to guarantee non-null values in returned frontend types). backend/main.mo is truncated before any relevant API implementations.",
+      "id": "REQ-1",
+      "requirement": "Update the rich-text editor to use a Tiptap editor instance (keeping RichTextEditor API) and ensure the official Tiptap Image extension is enabled (no non-Tiptap libs).",
+      "reason": "The modified RichTextEditor shows a contenteditable div workflow (direct innerHTML set, DOM click handlers, manual paste handling) rather than initializing/using a Tiptap editor instance and extensions. No evidence of enabling the official Tiptap Image extension or producing Tiptap document content via onUpdate.",
       "evidence": [
-        "backend/main.mo (truncated; only type additions visible, not API logic)"
+        "frontend/src/components/RichTextEditor.tsx"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Implement an image node schema supporting resize preset + optional caption stored within the editor document, with inline caption editing below the image.",
+      "reason": "Although an ImageWithCaption extension file is added, the provided diff evidence shows DOM-based wrappers/classes (e.g., `.image-with-caption-wrapper`, `.caption-display`) but does not show a Tiptap node schema/attributes for `caption` and `size` nor that these are stored in/round-tripped through the editor document structure.",
+      "evidence": [
+        "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+        "frontend/src/components/RichTextEditor.tsx",
+        "frontend/src/index.css"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Add a contextual image menu on image select with Small/Medium/Full Width preset options applying exactly one of `img-small`/`img-medium`/`img-full` via node attributes persisted in saved content; no drag resizing.",
+      "reason": "The diff shows click detection on `.image-with-caption-wrapper` and state for showing an image menu, and CSS rules for `.img-small/.img-medium/.img-full`, but does not show (in the provided/truncated snippet) the actual menu UI controls, nor how selecting a preset updates persisted editor content (node attrs/HTML) and restores on reload.",
+      "evidence": [
+        "frontend/src/components/RichTextEditor.tsx",
+        "frontend/src/index.css"
       ]
     },
     {
       "id": "REQ-4",
-      "requirement": "In the document editor UI, provide a dropdown in the top toolbar with exactly two options (News/Review), default News, persisted per document and reflected when loading.",
-      "reason": "The only evidenced UI change is a contentType select on CreateReviewPage; there is no evidence of a dropdown in the editor top toolbar, nor evidence it is wired to load an existing document and reflect stored contentType.",
+      "requirement": "Ensure consistent spacing and responsive mobile behavior so images don’t overflow on narrow screens (CSS-based, lightweight).",
+      "reason": "Spacing styles are present (`margin: 1.5rem 0`), but the provided CSS evidence does not show explicit mobile/narrow-screen overrides ensuring small/medium presets adapt (e.g., forced full-width/max-width:100% on small screens). The CSS file is truncated, so this cannot be confirmed.",
       "evidence": [
-        "frontend/src/pages/CreateReviewPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Conditionally render Pros/Cons/Rating fields outside the rich-text editor only when contentType=review; hide for news; render/hide immediately on dropdown change and correctly on load.",
-      "reason": "CreateReviewPage defines state for pros/cons/rating and computes isReviewType, but the JSX where these fields are conditionally rendered is truncated, and there is no evidence of load behavior for an existing saved document.",
-      "evidence": [
-        "frontend/src/pages/CreateReviewPage.tsx (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "requirement": "Persist Pros/Cons/Rating on save and restore them on load; pros/cons stored as arrays; frontend must serialize/deserialize deterministically (textarea <-> array).",
-      "reason": "Saving path is partially evidenced (textareaToArray used on submit), but there is no evidence of restoring pros/cons/rating into the form when loading an existing document, and no evidence that arrayToTextarea is used anywhere for deserialization/population.",
-      "evidence": [
-        "frontend/src/pages/CreateReviewPage.tsx",
-        "frontend/src/utils/reviewFields.ts",
-        "frontend/src/hooks/useQueries.ts (truncated)"
+        "frontend/src/index.css"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Rating normalization/clamping to a 0–100 range with rounding.",
-      "reason": "The BuildRequest specifies rating as a simple number with default 0 and explicitly calls out 'No advanced calculations or derived logic for the rating field.' Introducing clamping/rounding to 0–100 is additional behavior not requested.",
+      "description": "Paste sanitization/interception within the editor (custom handlePaste, sanitizePastedHTML/sanitizePastedText) and a separate tiptapPasteSanitizer utility.",
+      "reason": "BuildRequest does not ask to change paste behavior or add paste sanitization; it focuses on Tiptap image sizing/captions, spacing/responsiveness, and preserving markup via the existing sanitizer for rendering stored content.",
       "evidence": [
-        "frontend/src/utils/reviewFields.ts (normalizeRating clamps to 0..100 and rounds)"
+        "frontend/src/components/RichTextEditor.tsx",
+        "frontend/src/utils/tiptapPasteSanitizer.ts"
+      ]
+    },
+    {
+      "description": "Support inserting images as base64 data URLs.",
+      "reason": "BuildRequest does not request base64 image insertion behavior; it only requires using the official Tiptap Image extension and supporting sizing presets/captions.",
+      "evidence": [
+        "frontend/src/components/RichTextEditor.tsx",
+        "frontend/src/utils/richTextHtmlSanitizer.ts"
       ]
     }
   ],
   "confidence": 0.62,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/CreateReviewPage.tsx",
-    "frontend/src/pages/ManageBikesPage.tsx",
-    "frontend/src/utils/reviewFields.ts",
+    "frontend/src/components/RichTextEditor.tsx",
+    "frontend/src/index.css",
+    "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+    "frontend/src/utils/richTextHtmlSanitizer.ts",
+    "frontend/src/utils/tiptapPasteSanitizer.ts",
     "project_state.json"
   ]
 }

@@ -4,10 +4,10 @@ import { ArrowLeft, Loader2, Save, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import RequireAuthAction from '../components/RequireAuthAction';
+import RichTextEditor from '../components/RichTextEditor';
 import { useCreateOrSaveArticle } from '../hooks/useQueries';
 import { Category, Region, ContentStatus, ContentType } from '../backend';
 import { toast } from 'sonner';
@@ -165,13 +165,10 @@ export default function CreateArticlePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
+                <RichTextEditor
+                  content={content}
+                  onUpdate={setContent}
                   placeholder="Write your article content here..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={12}
-                  required
                 />
               </div>
 

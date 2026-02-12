@@ -1,88 +1,75 @@
 {
   "kind": "build_request",
-  "title": "Add Review-only Pros/Cons/Rating fields and persist per document",
+  "title": "Improve Tiptap editor image node: resize presets, inline captions, spacing, and mobile responsiveness",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Extend the persisted document model so each saved document can store `contentType: \"news\" | \"review\"` and, when `contentType` is `\"review\"`, also store `pros`, `cons`, and `rating` alongside the document data (not editor-only UI state).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Save per document\n\nStore as:\n\ncontentType: \"news\" | \"review\"",
-          "They must be saved alongside the document in the database.",
-          "{\n  title: \"\",\n  content: \"\",\n  contentType: \"review\",\n  pros: [],\n  cons: [],\n  rating: 0\n}"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend types for stored documents include `contentType` (news/review) and include fields for `pros`, `cons`, and `rating` so they can be returned on load and persisted on save.",
-        "`pros` and `cons` are stored as arrays (as per the user’s structure example).",
-        "`rating` is stored as a number and defaults to 0 when not provided."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Update backend create/save and fetch/query APIs for the relevant document type(s) so that `contentType`, `pros`, `cons`, and `rating` are persisted on save and returned on load, with defaults applied when fields are missing (default `contentType` to `news`, default `pros`/`cons` to empty arrays, default `rating` to 0).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Wire the dropdown value into the editor’s per-document load/save flow",
-          "default to `News` when no value exists",
-          "They must be saved alongside the document in the database."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Saving a document persists the selected `contentType` value and (when applicable) `pros`, `cons`, and `rating`.",
-        "Loading an existing document returns the saved `contentType`, `pros`, `cons`, and `rating` values.",
-        "If an older stored document lacks these fields, the API returns defaults (news / [] / [] / 0) rather than trapping or returning null/undefined in frontend types."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Add/extend conditional Motoko migration logic to backfill existing stored documents so that upgrades do not lose data and older records receive default values for new fields (`contentType = #news` when missing; `pros = []`, `cons = []`, `rating = 0`).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Save per document",
-          "default to `News` when no value exists"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Upgrading the canister preserves all existing documents.",
-        "After upgrade, existing documents without `contentType` behave as `news` by default.",
-        "After upgrade, existing documents have `pros`/`cons` defaulted to empty arrays and `rating` defaulted to 0 (either via migration or via safe defaults in read paths, with migration used for stable-state correctness)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "In the document editor UI, provide a dropdown in the top toolbar with options `News` and `Review`, defaulting to `News`, and persist the selected value per document as `contentType: \"news\" | \"review\"`.",
+      "text": "Update the existing rich-text editor implementation to use the Tiptap editor instance (keeping the existing RichTextEditor component API) and ensure the official Tiptap Image extension is enabled if it is not already present; do not install any libraries beyond the official Tiptap Image extension.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-2"
         ],
         "quotes": [
-          "Add a dropdown in the top toolbar\n\nOptions: News and Review\n\nDefault: News\n\nSave per document"
+          "If not already implemented, create the base image functionality first using the standard Tiptap Image extension.",
+          "Do not install new libraries beyond the official Tiptap image extension.",
+          "Use existing editor configuration only."
         ]
       },
       "acceptanceCriteria": [
-        "The editor UI shows a content type dropdown with exactly two options: News and Review.",
-        "The default selection for new documents is News.",
-        "When a saved document is loaded, the dropdown reflects the stored `contentType`."
+        "RichTextEditor continues to accept `content` and call `onUpdate` with the updated document content.",
+        "The editor supports inserting and rendering images using the official Tiptap Image extension (no third-party image extensions).",
+        "No new non-Tiptap libraries are added; only the official Tiptap Image extension may be added if missing."
       ]
     },
     {
-      "id": "REQ-5",
-      "text": "When the selected `contentType` is `Review`, conditionally render three optional static fields outside the editor content area (no custom editor nodes): Pros (textarea), Cons (textarea), Rating (number input). Hide them when `contentType` is `News`. Render/hide immediately on dropdown change and also correctly when loading an existing document.",
+      "id": "REQ-2",
+      "text": "Implement an image node schema that supports (a) a resize preset and (b) an optional caption stored within the editor document (not in a separate database field), with inline editing of the caption directly below the image.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Captions should: Be editable inline below each image",
+          "Be stored as part of the image node schema",
+          "Save together with the image inside the document structure",
+          "Do not create a separate database field for captions."
+        ]
+      },
+      "acceptanceCriteria": [
+        "When an image is inserted, it can store a caption value inside the editor document structure.",
+        "The caption is editable inline in the editor UI directly below the image.",
+        "Saving/loading the editor content preserves the image caption without requiring any separate persistence field.",
+        "Captions are optional and can be left empty without rendering visual artifacts (e.g., no empty placeholder caption shown when blank)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add a lightweight contextual image menu that appears when the user clicks/selects an image, offering three preset width options: Small, Medium, Full Width. Selecting an option applies CSS classes only: `img-small`, `img-medium`, `img-full`. Do not implement drag resizing.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Resize options should be selected via a small contextual image menu that appears when the image is clicked.",
+          "Show options: Small Medium Full Width",
+          "Apply resize using CSS classes only (no heavy logic). Example: img-small img-medium img-full",
+          "Do not implement drag resizing."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking an image shows a small contextual menu near the image (or selection) with buttons/controls: Small, Medium, Full Width.",
+        "Choosing a size applies exactly one of: `img-small`, `img-medium`, `img-full` to the rendered image container/element via editor node attributes -> DOM rendering.",
+        "No drag handles or mouse-driven resizing is implemented.",
+        "The chosen size persists in saved content and is restored correctly when content is reloaded."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Ensure images have proper spacing above and below, and implement responsive mobile behavior so images render cleanly on narrow screens (lightweight CSS-based solution; no heavy runtime layout logic).",
       "target": "frontend",
       "source": {
         "messageIds": [
@@ -90,47 +77,47 @@
           "msg-2"
         ],
         "quotes": [
-          "Render three optional static fields below the editor:\n\nPros (textarea)\n\nCons (textarea)\n\nRating (number input)\n\nDo not create custom editor nodes.\nDo not install new packages.\n\nKeep them outside Tiptap—simple form fields.",
-          "Immediately when user selects “Review”\n\nAnd also when loading an existing review document\n\nIf:\n\ncontentType = \"review\" → show fields\n\ncontentType = \"news\" → hide fields"
+          "Proper spacing above and below images",
+          "Responsive behavior on mobile",
+          "Keep implementation lightweight."
         ]
       },
       "acceptanceCriteria": [
-        "Pros/Cons/Rating fields are rendered only when `contentType` is `review` and are not part of the rich-text editor schema.",
-        "Switching the dropdown between News and Review shows/hides the fields immediately without animation complexity.",
-        "Loading a document with `contentType = review` shows the fields populated from stored values; loading with `news` hides them."
+        "Images in the editor and in rendered content have consistent vertical spacing from surrounding paragraphs/headings.",
+        "On mobile/narrow widths, images do not overflow the content area and remain readable; widths adapt appropriately (e.g., full width on small screens even if set to small/medium, if needed).",
+        "The solution is implemented primarily through CSS/Tailwind and existing editor rendering hooks, without complex runtime calculations."
       ]
     },
     {
-      "id": "REQ-6",
-      "text": "Persist the values of Pros, Cons, and Rating with the document on save, and restore them into the form on load. `pros` and `cons` must be stored as arrays; the UI must serialize/deserialize between the textarea representation and the array representation consistently.",
-      "target": "both",
+      "id": "REQ-5",
+      "text": "Update HTML sanitization used for rendering stored rich-text so that the image sizing classes and caption markup produced by the editor are preserved (while still sanitizing unsafe tags/attributes).",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-2"
         ],
         "quotes": [
-          "They must be saved alongside the document in the database.",
-          "pros: [],\n  cons: [],\n  rating: 0"
+          "Be stored as part of the image node schema",
+          "Apply resize using CSS classes only"
         ]
       },
       "acceptanceCriteria": [
-        "Saving a review-type document writes `pros`, `cons`, and `rating` to the backend and they are returned on subsequent loads.",
-        "`pros`/`cons` are stored as arrays in the backend interface; frontend converts to/from textarea content deterministically (no data loss across save/load).",
-        "For news-type documents, saving does not require Pros/Cons/Rating to be present; defaults are used when absent."
+        "Content rendered via the existing sanitizer preserves the image sizing classes (`img-small`, `img-medium`, `img-full`) and any required safe attributes needed to render captions.",
+        "Unsafe attributes continue to be removed as before; existing non-image formatting still renders correctly.",
+        "No new libraries are introduced for sanitization."
       ]
     }
   ],
   "constraints": [
-    "Do not create custom editor nodes.",
-    "Do not install new packages.",
-    "Keep Pros/Cons/Rating outside the rich-text editor as simple form fields.",
-    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add/adjust backend/migration.mo if state upgrade requires it.",
-    "Do not edit frontend files under frontend/src/components/ui or other immutablePaths listed in SYSTEM_CONTEXT; compose existing UI components instead."
+    "Do not install new libraries, except the official Tiptap Image extension if it is not already installed.",
+    "Do not implement drag-based image resizing.",
+    "Keep the implementation lightweight and within the existing editor configuration.",
+    "Do not create a separate database field for image captions; captions must live inside the editor document/content."
   ],
   "nonGoals": [
-    "No advanced calculations or derived logic for the rating field.",
-    "No animation-heavy transitions for showing/hiding the review fields.",
-    "No new authentication providers or third-party integrations."
+    "Adding image optimization, compression, or external image hosting/CDN integration.",
+    "Implementing real-time collaboration or multi-user editing.",
+    "Adding complex image editing features (crop, rotate, filters)."
   ],
   "imageRequirements": {
     "required": [],

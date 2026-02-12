@@ -1,63 +1,112 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Review-only contentType + Pros/Cons/Rating UI and save/load wiring",
+  "title": "Tiptap image node improvements: presets, captions, spacing, responsive rendering, and sanitizer updates",
   "requirements": [
     {
-      "id": "REQ-4",
-      "summary": "Add a content type dropdown (News/Review) in the editor toolbar area and keep it persisted per document via the existing save/load flow.",
+      "id": "REQ-1",
+      "summary": "Replace the current contentEditable-based editor with a Tiptap editor instance while preserving the RichTextEditor component API and enabling the official Tiptap Image extension.",
       "acceptanceCriteria": [
-        "The editor UI shows a content type dropdown with exactly two options: News and Review.",
-        "The default selection for new documents is News.",
-        "When a saved document is loaded, the dropdown reflects the stored `contentType`."
+        "RichTextEditor continues to accept `content` and call `onUpdate` with the updated document content.",
+        "The editor supports inserting and rendering images using the official Tiptap Image extension (no third-party image extensions).",
+        "No new non-Tiptap libraries are added; only the official Tiptap Image extension may be added if missing."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/CreateReviewPage.tsx",
+          "path": "frontend/src/components/RichTextEditor.tsx",
           "operation": "modify",
-          "description": "Ensure the Content Type dropdown is presented prominently in the page’s top editing controls (toolbar area) with exactly `News` and `Review`, defaulting to `news`, and that its value is included in the save payload and restored from loaded document data when editing/rehydrating. Use existing shadcn-ui Select components (Select/SelectTrigger/SelectContent/SelectItem) for the dropdown. Verify the component's usage instructions before implementing."
+          "description": "Refactor RichTextEditor to use a Tiptap editor instance (keeping the existing `content`/`onUpdate` API), including existing formatting controls and paste sanitization hooks; ensure the official `@tiptap/extension-image` is included in the editor configuration for image rendering/insertion."
+        },
+        {
+          "path": "frontend/package.json",
+          "operation": "modify",
+          "description": "If not already present, add the official Tiptap Image extension dependency (`@tiptap/extension-image`) only; do not add any other new libraries."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Implement a Tiptap image node that stores a resize preset and optional inline caption inside the document and supports editing the caption directly below the image.",
+      "acceptanceCriteria": [
+        "When an image is inserted, it can store a caption value inside the editor document structure.",
+        "The caption is editable inline in the editor UI directly below the image.",
+        "Saving/loading the editor content preserves the image caption without requiring any separate persistence field.",
+        "Captions are optional and can be left empty without rendering visual artifacts (e.g., no empty placeholder caption shown when blank)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+          "operation": "create",
+          "description": "Create a custom Tiptap node (built on/compatible with the official Tiptap Image extension) that adds node attributes for `sizePreset` and `caption`, renders an image wrapper plus caption markup, and uses a NodeView to allow inline caption editing directly beneath the image."
+        },
+        {
+          "path": "frontend/src/components/RichTextEditor.tsx",
+          "operation": "modify",
+          "description": "Register and use the custom ImageWithCaption extension in the editor configuration so inserted images carry `caption` and `sizePreset` in-document and captions can be edited inline beneath the image."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add a contextual image menu on image selection with preset width options that apply only the CSS classes img-small, img-medium, or img-full (no drag resizing).",
+      "acceptanceCriteria": [
+        "Clicking an image shows a small contextual menu near the image (or selection) with buttons/controls: Small, Medium, Full Width.",
+        "Choosing a size applies exactly one of: `img-small`, `img-medium`, `img-full` to the rendered image container/element via editor node attributes -> DOM rendering.",
+        "No drag handles or mouse-driven resizing is implemented.",
+        "The chosen size persists in saved content and is restored correctly when content is reloaded."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/RichTextEditor.tsx",
+          "operation": "modify",
+          "description": "Implement a lightweight contextual image menu (e.g., Tiptap BubbleMenu/Floating UI anchored to selection) that appears when the image node is selected and updates the image node attribute used to render exactly one sizing class: `img-small`, `img-medium`, or `img-full`."
+        },
+        {
+          "path": "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+          "operation": "modify",
+          "description": "Ensure the image node rendering maps the stored preset attribute to DOM output that includes exactly one class from `img-small`, `img-medium`, `img-full`, and that the attribute is preserved in HTML serialization/parsing so it round-trips through saved content."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Add consistent vertical spacing and CSS-based responsive behavior so images render cleanly on narrow screens without runtime layout logic.",
+      "acceptanceCriteria": [
+        "Images in the editor and in rendered content have consistent vertical spacing from surrounding paragraphs/headings.",
+        "On mobile/narrow widths, images do not overflow the content area and remain readable; widths adapt appropriately (e.g., full width on small screens even if set to small/medium, if needed).",
+        "The solution is implemented primarily through CSS/Tailwind and existing editor rendering hooks, without complex runtime calculations."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Add lightweight CSS rules for the editor and rendered prose content to style the image wrapper and caption (spacing above/below), define the sizing classes `img-small`, `img-medium`, `img-full`, and add mobile-responsive overrides to prevent overflow and keep images readable on narrow screens."
+        },
+        {
+          "path": "frontend/src/tiptap/extensions/ImageWithCaption.tsx",
+          "operation": "modify",
+          "description": "Align the node’s HTML structure/classes with the global CSS expectations (wrapper element + image + optional caption) so spacing/responsive behaviors apply consistently both in-editor and when rendering stored content."
         }
       ]
     },
     {
       "id": "REQ-5",
-      "summary": "Conditionally render Pros/Cons/Rating form fields outside the editor content area when contentType is Review, and hide them for News, updating immediately on dropdown changes and on load.",
+      "summary": "Update the existing HTML sanitizer so image sizing classes and caption markup produced by the editor are preserved while continuing to strip unsafe tags/attributes.",
       "acceptanceCriteria": [
-        "Pros/Cons/Rating fields are rendered only when `contentType` is `review` and are not part of the rich-text editor schema.",
-        "Switching the dropdown between News and Review shows/hides the fields immediately without animation complexity.",
-        "Loading a document with `contentType = review` shows the fields populated from stored values; loading with `news` hides them."
+        "Content rendered via the existing sanitizer preserves the image sizing classes (`img-small`, `img-medium`, `img-full`) and any required safe attributes needed to render captions.",
+        "Unsafe attributes continue to be removed as before; existing non-image formatting still renders correctly.",
+        "No new libraries are introduced for sanitization."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/CreateReviewPage.tsx",
+          "path": "frontend/src/utils/richTextHtmlSanitizer.ts",
           "operation": "modify",
-          "description": "Add three simple form fields outside the main content textarea (no custom editor nodes; keep as plain form fields): Pros (Textarea), Cons (Textarea), Rating (number Input). Render them only when `contentType === 'review'`, hide otherwise, and update visibility immediately on dropdown change and when initial document values are set. Use existing shadcn-ui Input/Textarea/Label components to match app styling. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Persist Pros/Cons/Rating on save and restore them on load; serialize/deserialize pros/cons between textarea and string arrays deterministically.",
-      "acceptanceCriteria": [
-        "Saving a review-type document writes `pros`, `cons`, and `rating` to the backend and they are returned on subsequent loads.",
-        "`pros`/`cons` are stored as arrays in the backend interface; frontend converts to/from textarea content deterministically (no data loss across save/load).",
-        "For news-type documents, saving does not require Pros/Cons/Rating to be present; defaults are used when absent."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/reviewFields.ts",
-          "operation": "create",
-          "description": "Add deterministic helpers for serializing/deserializing review pros/cons between textarea strings and backend arrays (e.g., split on newlines, trim each line, filter empty; join arrays with `\\n`). Include rating normalization helper (coerce to number, default to 0 when empty/invalid)."
+          "description": "Extend the sanitizer allowlist to preserve the image caption markup produced by the editor (e.g., figure/figcaption or equivalent) and preserve safe `class` attributes needed for `img-small`, `img-medium`, `img-full` on the relevant elements, while maintaining existing unsafe tag/attribute stripping behavior and without adding new sanitization libraries."
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/components/LongFormContent.tsx",
           "operation": "modify",
-          "description": "Update `useCreateOrSaveReview` mutation variables to include `pros: string[]`, `cons: string[]`, and `rating: number`, and pass them to the backend actor call. Ensure defaults are applied in the mutation function for missing values (pros/cons default to empty arrays; rating defaults to 0; contentType defaults to `news` if not provided)."
-        },
-        {
-          "path": "frontend/src/pages/CreateReviewPage.tsx",
-          "operation": "modify",
-          "description": "Wire Pros/Cons/Rating UI state into the save flow by converting textarea values to arrays using the new utils and sending them through `useCreateOrSaveReview`. On initialization (new document), default pros/cons to empty and rating to 0; ensure switching to `news` does not require these fields (keep state but omit or send defaults). Use existing shadcn-ui components for inputs. Verify the component's usage instructions before implementing."
+          "description": "Ensure rendered rich-text continues to route through the updated sanitizer and that the sanitized output supports the editor-produced image wrapper/caption structure and sizing classes in final display."
         }
       ]
     }

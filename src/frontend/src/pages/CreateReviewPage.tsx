@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Slider } from '@/components/ui/slider';
 import RequireAuthAction from '../components/RequireAuthAction';
 import BikeSelector from '../components/BikeSelector';
+import RichTextEditor from '../components/RichTextEditor';
 import { useCreateOrSaveReview, useGetAllBikes } from '../hooks/useQueries';
 import { Region, ContentStatus, ContentType } from '../backend';
 import { toast } from 'sonner';
@@ -240,13 +241,10 @@ export default function CreateReviewPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="content">Review Content</Label>
-                <Textarea
-                  id="content"
+                <RichTextEditor
+                  content={content}
+                  onUpdate={setContent}
                   placeholder="Write your detailed review here..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={12}
-                  required
                 />
               </div>
 
@@ -277,12 +275,13 @@ export default function CreateReviewPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="rating">Overall Rating (0-100)</Label>
+                    <Label htmlFor="rating">Overall Rating (0-5)</Label>
                     <Input
                       id="rating"
                       type="number"
                       min="0"
-                      max="100"
+                      max="5"
+                      step="0.1"
                       placeholder="0"
                       value={rating}
                       onChange={(e) => setRating(e.target.value)}
