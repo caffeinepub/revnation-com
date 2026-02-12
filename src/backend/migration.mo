@@ -1,66 +1,115 @@
 import List "mo:core/List";
 import Map "mo:core/Map";
+import Nat "mo:core/Nat";
 import Nat8 "mo:core/Nat8";
 import Principal "mo:core/Principal";
 
 module {
-  type OldRegion = {
+  public type Category = {
+    #news;
+    #reviews;
+    #comparisons;
+    #electric;
+    #racing;
+    #concepts;
+    #buyingGuides;
+  };
+
+  public type Region = {
     #asia;
     #europe;
     #usa;
     #middleEast;
   };
 
-  type OldBike = {
-    id : Nat;
-    name : Text;
-    brand : Text;
-    specs : Text;
-    region : OldRegion;
-    createdBy : Principal;
+  public type Score = {
+    performance : Nat8;
+    design : Nat8;
+    comfort : Nat8;
+    value : Nat8;
   };
 
-  type OldActor = {
-    bikes : List.List<OldBike>;
-    // Other old state fields that remain unchanged.
-  };
-
-  type NewPriceRange = {
+  public type PriceRange = {
     min : Nat;
     max : Nat;
   };
 
-  type NewBike = {
-    id : Nat;
-    name : Text;
-    brand : Text;
-    specs : Text;
-    priceRange : NewPriceRange;
-    images : [Text];
-    details : Text;
-    region : OldRegion;
-    createdBy : Principal;
+  public type TimeValue = Int;
+  public type ContentStatus = { #draft; #published };
+
+  public type ImageType = {
+    #uploaded : Blob;
+    #linked : Text;
   };
 
-  type NewActor = {
-    bikes : List.List<NewBike>;
-    // Other new state fields.
+  public type ColorOption = {
+    name : Text;
+    colorCode : Text;
+    images : [ImageType];
+  };
+
+  public type ContentType = {
+    #news;
+    #review;
+  };
+
+  public type OldReview = {
+    id : Nat;
+    title : Text;
+    content : Text;
+    author : Text;
+    score : Score;
+    bikeId : Nat;
+    region : Region;
+    createdAt : TimeValue;
+    createdBy : Principal;
+    hidden : Bool;
+    status : ContentStatus;
+    contentType : ?ContentType;
+  };
+
+  public type OldActor = {
+    reviews : List.List<OldReview>;
+  };
+
+  public type Review = {
+    id : Nat;
+    title : Text;
+    content : Text;
+    author : Text;
+    score : Score;
+    bikeId : Nat;
+    region : Region;
+    createdAt : TimeValue;
+    createdBy : Principal;
+    hidden : Bool;
+    status : ContentStatus;
+    contentType : ?ContentType;
+    pros : [Text];
+    cons : [Text];
+    rating : Nat8;
+  };
+
+  public type NewActor = {
+    reviews : List.List<Review>;
   };
 
   public func run(old : OldActor) : NewActor {
-    let newBikes = old.bikes.map<OldBike, NewBike>(
-      func(oldBike) {
-        {
-          oldBike with
-          priceRange = {
-            min = 0; // Default value, can be updated later
-            max = 0; // Default value, can be updated later
+    {
+      reviews = old.reviews.map<OldReview, Review>(
+        func(oldReview) {
+          {
+            oldReview with
+            contentType = switch (oldReview.contentType) {
+              case (null) { ?#news };
+              case (x) { x };
+            };
+            pros = [];
+            cons = [];
+            rating = 0;
           };
-          images = []; // Default value, empty array
-          details = ""; // Default value, empty string
-        };
-      }
-    );
-    { bikes = newBikes };
+        }
+      );
+    };
   };
 };

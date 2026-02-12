@@ -1,26 +1,38 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Bike management web app with a Create Bike form and a color-palette detection UI element (site header bar + bike-form palette).",
-  "architectural_notes": [],
-  "known_issues": [
-    "Create Bike shows 'action not available' and does not create a bike entry when submitting the form."
+  "summary": "Add per-document content type (News/Review) with a toolbar dropdown, and for Review documents show/save Pros, Cons, and Rating as simple non-Tiptap form fields stored alongside the document.",
+  "architectural_notes": [
+    "Do not create custom Tiptap editor nodes for review fields; keep Pros/Cons/Rating as separate form fields outside the editor.",
+    "Do not install new packages for this feature.",
+    "Persist per-document metadata including contentType and review fields alongside document content in the database."
   ],
-  "isFixRequest": true,
+  "known_issues": [
+    "Automated build/deploy attempt failed (\"AI was unable to fulfill your request\") and required a retry."
+  ],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-fix-the-create-bike-flow-so-that-clicking-the-create-bike-submit-button-successfully-creates-a-new-bike-entry-and-the-new-bike-appears-in-the-user-s-bike-list-manage-bikes-page-instead-of-showing-an-action-not-available-error",
-      "title": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
+      "id": "feature-in-the-document-editor-ui-provide-a-dropdown-in-the-top-toolbar-with-options-news-and-review-defaulting-to-news-and-persist-the-selected-value-per-document-as-contenttype-news-review",
+      "title": "In the document editor UI, provide a dropdown in the top toolbar with options `News` and `Review`, defaulting to `News`, and persist the selected value per document as `contentType: \"news\" | \"review\"`.",
       "reqIds": [
-        "REQ-1"
+        "REQ-4"
       ],
       "version": 1
     },
     {
-      "id": "feature-remove-the-color-palette-detection-bar-ui-element-from-the-top-of-the-website-global-header-top-of-page-area-while-keeping-the-ai-palette-functionality-inside-the-bike-creation-edit-form-bikeform-unchanged-and-available",
-      "title": "Remove the color-palette detection bar/UI element from the top of the website (global header/top-of-page area), while keeping the AI palette functionality inside the bike creation/edit form (BikeForm) unchanged and available.",
+      "id": "feature-when-the-selected-contenttype-is-review-conditionally-render-three-optional-static-fields-outside-the-editor-content-area-no-custom-editor-nodes-pros-textarea-cons-textarea-rating-number-input-hide-them-when-contenttype-is-news-render-hide-immediately-on-dropdown-change-and-also-correctly-when-loading-an-existing-document",
+      "title": "When the selected `contentType` is `Review`, conditionally render three optional static fields outside the editor content area (no custom editor nodes): Pros (textarea), Cons (textarea), Rating (number input). Hide them when `contentType` is `News`. Render/hide immediately on dropdown change and also correctly when loading an existing document.",
       "reqIds": [
-        "REQ-2"
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-persist-the-values-of-pros-cons-and-rating-with-the-document-on-save-and-restore-them-into-the-form-on-load-pros-and-cons-must-be-stored-as-arrays-the-ui-must-serialize-deserialize-between-the-textarea-representation-and-the-array-representation-consistently",
+      "title": "Persist the values of Pros, Cons, and Rating with the document on save, and restore them into the form on load. `pros` and `cons` must be stored as arrays; the UI must serialize/deserialize between the textarea representation and the array representation consistently.",
+      "reqIds": [
+        "REQ-6"
       ],
       "version": 1
     }
@@ -28,18 +40,48 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix Create Bike: button should submit the form and successfully create a new bike entry (resolve 'action not available').",
+      "summary": "Add content-type dropdown in top toolbar (News default, Review) stored per document as contentType: \"news\" | \"review\"",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Remove the color-palette detection bar from the top of the site, but keep the AI palette on the bike creation form.",
+      "summary": "When contentType is \"review\", render Pros (textarea), Cons (textarea), and Rating (number input) as simple fields outside Tiptap; hide when \"news\"",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Persist review fields (pros, cons, rating) alongside document in DB with contentType; load to show fields on existing review documents",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Extend the persisted document model so each saved document can store `contentType: \"news\" | \"review\"` and, when `contentType` is `\"review\"`, also store `pros`, `cons`, and `rating` alongside the document data (not editor-only UI state).",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Update backend create/save and fetch/query APIs for the relevant document type(s) so that `contentType`, `pros`, `cons`, and `rating` are persisted on save and returned on load, with defaults applied when fields are missing (default `contentType` to `news`, default `pros`/`cons` to empty arrays, default `rating` to 0).",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add/extend conditional Motoko migration logic to backfill existing stored documents so that upgrades do not lose data and older records receive default values for new fields (`contentType = #news` when missing; `pros = []`, `cons = []`, `rating = 0`).",
+      "reqIds": [
+        "REQ-3"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Fix Create Bike submission and remove global palette bar (keep BikeForm palette)",
+  "projectName": "Add Review-only Pros/Cons/Rating fields and persist per document",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

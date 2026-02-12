@@ -11,7 +11,9 @@ import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -58,6 +60,11 @@ actor {
     images : [ImageType];
   };
 
+  public type ContentType = {
+    #news;
+    #review;
+  };
+
   public type Review = {
     id : Nat;
     title : Text;
@@ -70,6 +77,10 @@ actor {
     createdBy : Principal;
     hidden : Bool;
     status : ContentStatus;
+    contentType : ?ContentType;
+    pros : [Text];
+    cons : [Text];
+    rating : Nat8;
   };
 
   public type Article = {
@@ -83,6 +94,7 @@ actor {
     createdBy : Principal;
     hidden : Bool;
     status : ContentStatus;
+    contentType : ?ContentType;
   };
 
   public type Bike = {
@@ -322,6 +334,7 @@ actor {
     category : Category,
     region : Region,
     status : ContentStatus,
+    contentType : ?ContentType,
   ) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create or save articles");
@@ -337,6 +350,7 @@ actor {
       createdBy = caller;
       hidden = false;
       status;
+      contentType;
     };
     articles.add(article);
     nextArticleId += 1;
@@ -367,6 +381,7 @@ actor {
                 createdBy = a.createdBy;
                 hidden = a.hidden;
                 status = #published;
+                contentType = a.contentType;
               };
             } else {
               a;
@@ -395,6 +410,7 @@ actor {
             createdBy = a.createdBy;
             hidden = true;
             status = a.status;
+            contentType = a.contentType;
           };
         } else {
           a;
@@ -426,6 +442,10 @@ actor {
     bikeId : Nat,
     region : Region,
     status : ContentStatus,
+    contentType : ?ContentType,
+    pros : [Text],
+    cons : [Text],
+    rating : Nat8,
   ) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create or save reviews");
@@ -442,6 +462,10 @@ actor {
       createdBy = caller;
       hidden = false;
       status;
+      contentType;
+      pros;
+      cons;
+      rating;
     };
     reviews.add(review);
     nextReviewId += 1;
@@ -473,6 +497,10 @@ actor {
                 createdBy = r.createdBy;
                 hidden = r.hidden;
                 status = #published;
+                contentType = r.contentType;
+                pros = r.pros;
+                cons = r.cons;
+                rating = r.rating;
               };
             } else {
               r;
@@ -502,6 +530,10 @@ actor {
             createdBy = r.createdBy;
             hidden = true;
             status = r.status;
+            contentType = r.contentType;
+            pros = r.pros;
+            cons = r.cons;
+            rating = r.rating;
           };
         } else {
           r;

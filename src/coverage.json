@@ -1,53 +1,90 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T06:29:25.917Z",
+  "generatedAt": "2026-02-12T15:35:16.732Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 6,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/BikeForm.tsx",
-          "frontend/src/pages/ManageBikesPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/BikeForm.tsx",
-          "frontend/src/pages/ManageBikesPage.tsx"
-        ]
+        "summary": "Extend the persisted document model so each saved document can store `contentType: \"news\" | \"review\"` and, when `contentType` is `\"review\"`, also store `pros`, `cons`, and `rating` alongside the document data (not editor-only UI state).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Remove the color-palette detection bar/UI element from the top of the website (global header/top-of-page area), while keeping the AI palette functionality inside the bike creation/edit form (BikeForm) unchanged and available.",
+        "summary": "Update backend create/save and fetch/query APIs for the relevant document type(s) so that `contentType`, `pros`, `cons`, and `rating` are persisted on save and returned on load, with defaults applied when fields are missing (default `contentType` to `news`, default `pros`/`cons` to empty arrays, default `rating` to 0).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Add/extend conditional Motoko migration logic to backfill existing stored documents so that upgrades do not lose data and older records receive default values for new fields (`contentType = #news` when missing; `pros = []`, `cons = []`, `rating = 0`).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "In the document editor UI, provide a dropdown in the top toolbar with options `News` and `Review`, defaulting to `News`, and persist the selected value per document as `contentType: \"news\" | \"review\"`.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/AppHeader.tsx"
+          "frontend/src/pages/CreateReviewPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/AppHeader.tsx"
+          "frontend/src/pages/CreateReviewPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "When the selected `contentType` is `Review`, conditionally render three optional static fields outside the editor content area (no custom editor nodes): Pros (textarea), Cons (textarea), Rating (number input). Hide them when `contentType` is `News`. Render/hide immediately on dropdown change and also correctly when loading an existing document.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/CreateReviewPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/CreateReviewPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Persist the values of Pros, Cons, and Rating with the document on save, and restore them into the form on load. `pros` and `cons` must be stored as arrays; the UI must serialize/deserialize between the textarea representation and the array representation consistently.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/reviewFields.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/CreateReviewPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/reviewFields.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/CreateReviewPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AppHeader.tsx",
-    "frontend/src/components/BikeForm.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/CreateReviewPage.tsx",
     "frontend/src/pages/ManageBikesPage.tsx",
+    "frontend/src/utils/reviewFields.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

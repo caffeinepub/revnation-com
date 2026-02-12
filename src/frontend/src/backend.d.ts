@@ -14,19 +14,6 @@ export class ExternalBlob {
     static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
-export interface Bike {
-    id: bigint;
-    region: Region;
-    colorOptions: Array<ColorOption>;
-    name: string;
-    createdBy: Principal;
-    mainImages: Array<ImageType>;
-    priceRange: PriceRange;
-    specs: string;
-    details: string;
-    brand: string;
-    brandLogo?: ImageType;
-}
 export interface Rating {
     createdAt: TimeValue;
     user: Principal;
@@ -52,12 +39,26 @@ export interface Score {
     comfort: number;
     performance: number;
 }
+export interface Bike {
+    id: bigint;
+    region: Region;
+    colorOptions: Array<ColorOption>;
+    name: string;
+    createdBy: Principal;
+    mainImages: Array<ImageType>;
+    priceRange: PriceRange;
+    specs: string;
+    details: string;
+    brand: string;
+    brandLogo?: ImageType;
+}
 export interface Article {
     id: bigint;
     region: Region;
     status: ContentStatus;
     title: string;
     content: string;
+    contentType?: ContentType;
     createdAt: TimeValue;
     createdBy: Principal;
     hidden: boolean;
@@ -86,11 +87,15 @@ export interface Review {
     status: ContentStatus;
     title: string;
     content: string;
+    contentType?: ContentType;
+    cons: Array<string>;
     createdAt: TimeValue;
     createdBy: Principal;
+    pros: Array<string>;
     hidden: boolean;
     author: string;
     score: Score;
+    rating: number;
     bikeId: bigint;
 }
 export interface UserProfile {
@@ -110,6 +115,10 @@ export enum ContentStatus {
     published = "published",
     draft = "draft"
 }
+export enum ContentType {
+    review = "review",
+    news = "news"
+}
 export enum Region {
     usa = "usa",
     europe = "europe",
@@ -125,8 +134,8 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createBike(name: string, brand: string, specs: string, priceRange: PriceRange, mainImages: Array<ImageType>, details: string, region: Region, colorOptions: Array<ColorOption>, brandLogo: ImageType | null): Promise<bigint>;
     createComment(reviewId: bigint, content: string): Promise<bigint>;
-    createOrSaveArticle(title: string, content: string, author: string, category: Category, region: Region, status: ContentStatus): Promise<bigint>;
-    createOrSaveReview(title: string, content: string, author: string, score: Score, bikeId: bigint, region: Region, status: ContentStatus): Promise<bigint>;
+    createOrSaveArticle(title: string, content: string, author: string, category: Category, region: Region, status: ContentStatus, contentType: ContentType | null): Promise<bigint>;
+    createOrSaveReview(title: string, content: string, author: string, score: Score, bikeId: bigint, region: Region, status: ContentStatus, contentType: ContentType | null, pros: Array<string>, cons: Array<string>, rating: number): Promise<bigint>;
     deleteArticle(articleId: bigint): Promise<void>;
     deleteBike(bikeId: bigint): Promise<void>;
     deleteComment(commentId: bigint): Promise<void>;

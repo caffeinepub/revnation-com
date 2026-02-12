@@ -1,30 +1,62 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T06:29:25.914Z",
-  "summary": "REQ-2 appears addressed by changes to the global header (palette-related navigation/UI removed). REQ-1 (Create Bike submission fix + clear error messaging + automatic list refresh) cannot be confirmed from the provided truncated diffs; the key createBike mutation wiring, backend createBike handling, and specific UI error replacement for “action not available” are not evidenced.",
+  "generatedAt": "2026-02-12T15:35:16.729Z",
+  "summary": "Diff adds backend fields/migration for review documents (contentType, pros/cons arrays, rating) and introduces frontend utilities plus CreateReviewPage UI/state to capture and save these fields. However, the requested editor-toolbar dropdown and robust load/restore behavior for existing documents are not evidenced, and some added logic (rating normalization/clamping) goes beyond stated requirements.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
-      "reason": "The diff summary does not show the actual createBike call path being corrected (frontend mutation + backend method), nor evidence that the generic “action not available” error is replaced with a clear, cause-specific message while keeping the form open on failure. ManageBikesPage shows an invalidate on form close, but there’s no visible evidence that the form is closed only on success and that failures keep it open with a specific message.",
+      "id": "REQ-2",
+      "requirement": "Ensure backend create/save and fetch/query APIs persist and return contentType/pros/cons/rating with safe defaults when missing (news / [] / [] / 0).",
+      "reason": "The diff shows type changes and a migration, but does not show the actual backend API functions (create/save/fetch/query) being updated to apply defaults on read/write for older records (or to guarantee non-null values in returned frontend types). backend/main.mo is truncated before any relevant API implementations.",
       "evidence": [
-        "frontend/src/hooks/useQueries.ts (truncated; no visible createBike mutation implementation in provided excerpt)",
-        "frontend/src/components/BikeForm.tsx (truncated; no visible submit handler/onError messaging in provided excerpt)",
-        "backend/main.mo (truncated; no visible createBike implementation/changes in provided excerpt)",
-        "frontend/src/pages/ManageBikesPage.tsx (shows invalidate on handleFormClose but not success/failure behavior)"
+        "backend/main.mo (truncated; only type additions visible, not API logic)"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "In the document editor UI, provide a dropdown in the top toolbar with exactly two options (News/Review), default News, persisted per document and reflected when loading.",
+      "reason": "The only evidenced UI change is a contentType select on CreateReviewPage; there is no evidence of a dropdown in the editor top toolbar, nor evidence it is wired to load an existing document and reflect stored contentType.",
+      "evidence": [
+        "frontend/src/pages/CreateReviewPage.tsx"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Conditionally render Pros/Cons/Rating fields outside the rich-text editor only when contentType=review; hide for news; render/hide immediately on dropdown change and correctly on load.",
+      "reason": "CreateReviewPage defines state for pros/cons/rating and computes isReviewType, but the JSX where these fields are conditionally rendered is truncated, and there is no evidence of load behavior for an existing saved document.",
+      "evidence": [
+        "frontend/src/pages/CreateReviewPage.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "requirement": "Persist Pros/Cons/Rating on save and restore them on load; pros/cons stored as arrays; frontend must serialize/deserialize deterministically (textarea <-> array).",
+      "reason": "Saving path is partially evidenced (textareaToArray used on submit), but there is no evidence of restoring pros/cons/rating into the form when loading an existing document, and no evidence that arrayToTextarea is used anywhere for deserialization/population.",
+      "evidence": [
+        "frontend/src/pages/CreateReviewPage.tsx",
+        "frontend/src/utils/reviewFields.ts",
+        "frontend/src/hooks/useQueries.ts (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.55,
+  "hallucinated_features": [
+    {
+      "description": "Rating normalization/clamping to a 0–100 range with rounding.",
+      "reason": "The BuildRequest specifies rating as a simple number with default 0 and explicitly calls out 'No advanced calculations or derived logic for the rating field.' Introducing clamping/rounding to 0–100 is additional behavior not requested.",
+      "evidence": [
+        "frontend/src/utils/reviewFields.ts (normalizeRating clamps to 0..100 and rounds)"
+      ]
+    }
+  ],
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AppHeader.tsx",
-    "frontend/src/components/BikeForm.tsx",
     "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/CreateReviewPage.tsx",
     "frontend/src/pages/ManageBikesPage.tsx",
+    "frontend/src/utils/reviewFields.ts",
     "project_state.json"
   ]
 }

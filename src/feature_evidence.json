@@ -2,12 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-create-bike-flow-so-that-clicking-the-create-bike-submit-button-successfully-creates-a-new-bike-entry-and-the-new-bike-appears-in-the-user-s-bike-list-manage-bikes-page-instead-of-showing-an-action-not-available-error",
-      "featureTitle": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
+      "featureId": "feature-in-the-document-editor-ui-provide-a-dropdown-in-the-top-toolbar-with-options-news-and-review-defaulting-to-news-and-persist-the-selected-value-per-document-as-contenttype-news-review",
+      "featureTitle": "In the document editor UI, provide a dropdown in the top toolbar with options `News` and `Review`, defaulting to `News`, and persist the selected value per document as `contentType: \"news\" | \"review\"`.",
       "files": [
-        "frontend/src/components/BikeForm.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/ManageBikesPage.tsx"
+        "frontend/src/pages/CreateReviewPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,15 +17,15 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-4"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-remove-the-color-palette-detection-bar-ui-element-from-the-top-of-the-website-global-header-top-of-page-area-while-keeping-the-ai-palette-functionality-inside-the-bike-creation-edit-form-bikeform-unchanged-and-available",
-      "featureTitle": "Remove the color-palette detection bar/UI element from the top of the website (global header/top-of-page area), while keeping the AI palette functionality inside the bike creation/edit form (BikeForm) unchanged and available.",
+      "featureId": "feature-when-the-selected-contenttype-is-review-conditionally-render-three-optional-static-fields-outside-the-editor-content-area-no-custom-editor-nodes-pros-textarea-cons-textarea-rating-number-input-hide-them-when-contenttype-is-news-render-hide-immediately-on-dropdown-change-and-also-correctly-when-loading-an-existing-document",
+      "featureTitle": "When the selected `contentType` is `Review`, conditionally render three optional static fields outside the editor content area (no custom editor nodes): Pros (textarea), Cons (textarea), Rating (number input). Hide them when `contentType` is `News`. Render/hide immediately on dropdown change and also correctly when loading an existing document.",
       "files": [
-        "frontend/src/components/AppHeader.tsx"
+        "frontend/src/pages/CreateReviewPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -39,7 +37,29 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-persist-the-values-of-pros-cons-and-rating-with-the-document-on-save-and-restore-them-into-the-form-on-load-pros-and-cons-must-be-stored-as-arrays-the-ui-must-serialize-deserialize-between-the-textarea-representation-and-the-array-representation-consistently",
+      "featureTitle": "Persist the values of Pros, Cons, and Rating with the document on save, and restore them into the form on load. `pros` and `cons` must be stored as arrays; the UI must serialize/deserialize between the textarea representation and the array representation consistently.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/CreateReviewPage.tsx",
+        "frontend/src/utils/reviewFields.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }

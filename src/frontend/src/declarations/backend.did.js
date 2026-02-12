@@ -54,6 +54,10 @@ export const ContentStatus = IDL.Variant({
   'published' : IDL.Null,
   'draft' : IDL.Null,
 });
+export const ContentType = IDL.Variant({
+  'review' : IDL.Null,
+  'news' : IDL.Null,
+});
 export const Score = IDL.Record({
   'value' : IDL.Nat8,
   'design' : IDL.Nat8,
@@ -80,6 +84,7 @@ export const Article = IDL.Record({
   'status' : ContentStatus,
   'title' : IDL.Text,
   'content' : IDL.Text,
+  'contentType' : IDL.Opt(ContentType),
   'createdAt' : TimeValue,
   'createdBy' : IDL.Principal,
   'hidden' : IDL.Bool,
@@ -92,11 +97,15 @@ export const Review = IDL.Record({
   'status' : ContentStatus,
   'title' : IDL.Text,
   'content' : IDL.Text,
+  'contentType' : IDL.Opt(ContentType),
+  'cons' : IDL.Vec(IDL.Text),
   'createdAt' : TimeValue,
   'createdBy' : IDL.Principal,
+  'pros' : IDL.Vec(IDL.Text),
   'hidden' : IDL.Bool,
   'author' : IDL.Text,
   'score' : Score,
+  'rating' : IDL.Nat8,
   'bikeId' : IDL.Nat,
 });
 export const BrandLogo = IDL.Record({
@@ -165,12 +174,32 @@ export const idlService = IDL.Service({
     ),
   'createComment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Nat], []),
   'createOrSaveArticle' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, Category, Region, ContentStatus],
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        Category,
+        Region,
+        ContentStatus,
+        IDL.Opt(ContentType),
+      ],
       [IDL.Nat],
       [],
     ),
   'createOrSaveReview' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, Score, IDL.Nat, Region, ContentStatus],
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        Score,
+        IDL.Nat,
+        Region,
+        ContentStatus,
+        IDL.Opt(ContentType),
+        IDL.Vec(IDL.Text),
+        IDL.Vec(IDL.Text),
+        IDL.Nat8,
+      ],
       [IDL.Nat],
       [],
     ),
@@ -271,6 +300,7 @@ export const idlFactory = ({ IDL }) => {
     'published' : IDL.Null,
     'draft' : IDL.Null,
   });
+  const ContentType = IDL.Variant({ 'review' : IDL.Null, 'news' : IDL.Null });
   const Score = IDL.Record({
     'value' : IDL.Nat8,
     'design' : IDL.Nat8,
@@ -297,6 +327,7 @@ export const idlFactory = ({ IDL }) => {
     'status' : ContentStatus,
     'title' : IDL.Text,
     'content' : IDL.Text,
+    'contentType' : IDL.Opt(ContentType),
     'createdAt' : TimeValue,
     'createdBy' : IDL.Principal,
     'hidden' : IDL.Bool,
@@ -309,11 +340,15 @@ export const idlFactory = ({ IDL }) => {
     'status' : ContentStatus,
     'title' : IDL.Text,
     'content' : IDL.Text,
+    'contentType' : IDL.Opt(ContentType),
+    'cons' : IDL.Vec(IDL.Text),
     'createdAt' : TimeValue,
     'createdBy' : IDL.Principal,
+    'pros' : IDL.Vec(IDL.Text),
     'hidden' : IDL.Bool,
     'author' : IDL.Text,
     'score' : Score,
+    'rating' : IDL.Nat8,
     'bikeId' : IDL.Nat,
   });
   const BrandLogo = IDL.Record({
@@ -382,12 +417,32 @@ export const idlFactory = ({ IDL }) => {
       ),
     'createComment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Nat], []),
     'createOrSaveArticle' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, Category, Region, ContentStatus],
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          Category,
+          Region,
+          ContentStatus,
+          IDL.Opt(ContentType),
+        ],
         [IDL.Nat],
         [],
       ),
     'createOrSaveReview' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, Score, IDL.Nat, Region, ContentStatus],
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          Score,
+          IDL.Nat,
+          Region,
+          ContentStatus,
+          IDL.Opt(ContentType),
+          IDL.Vec(IDL.Text),
+          IDL.Vec(IDL.Text),
+          IDL.Nat8,
+        ],
         [IDL.Nat],
         [],
       ),

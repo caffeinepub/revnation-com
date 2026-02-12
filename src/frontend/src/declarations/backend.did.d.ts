@@ -16,6 +16,7 @@ export interface Article {
   'status' : ContentStatus,
   'title' : string,
   'content' : string,
+  'contentType' : [] | [ContentType],
   'createdAt' : TimeValue,
   'createdBy' : Principal,
   'hidden' : boolean,
@@ -61,6 +62,8 @@ export interface Comment {
 }
 export type ContentStatus = { 'published' : null } |
   { 'draft' : null };
+export type ContentType = { 'review' : null } |
+  { 'news' : null };
 export type ExternalBlob = Uint8Array;
 export type ImageType = { 'uploaded' : ExternalBlob } |
   { 'linked' : string };
@@ -81,11 +84,15 @@ export interface Review {
   'status' : ContentStatus,
   'title' : string,
   'content' : string,
+  'contentType' : [] | [ContentType],
+  'cons' : Array<string>,
   'createdAt' : TimeValue,
   'createdBy' : Principal,
+  'pros' : Array<string>,
   'hidden' : boolean,
   'author' : string,
   'score' : Score,
+  'rating' : number,
   'bikeId' : bigint,
 }
 export interface Score {
@@ -144,11 +151,31 @@ export interface _SERVICE {
   >,
   'createComment' : ActorMethod<[bigint, string], bigint>,
   'createOrSaveArticle' : ActorMethod<
-    [string, string, string, Category, Region, ContentStatus],
+    [
+      string,
+      string,
+      string,
+      Category,
+      Region,
+      ContentStatus,
+      [] | [ContentType],
+    ],
     bigint
   >,
   'createOrSaveReview' : ActorMethod<
-    [string, string, string, Score, bigint, Region, ContentStatus],
+    [
+      string,
+      string,
+      string,
+      Score,
+      bigint,
+      Region,
+      ContentStatus,
+      [] | [ContentType],
+      Array<string>,
+      Array<string>,
+      number,
+    ],
     bigint
   >,
   'deleteArticle' : ActorMethod<[bigint], undefined>,

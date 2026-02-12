@@ -7,13 +7,20 @@ import { Separator } from '@/components/ui/separator';
 import ScoreBreakdown from '../components/ScoreBreakdown';
 import CommentsPanel from '../components/CommentsPanel';
 import RatingWidget from '../components/RatingWidget';
+import LongFormContent from '../components/LongFormContent';
+import TableOfContents from '../components/TableOfContents';
+import MobileToc from '../components/MobileToc';
+import { useTableOfContents } from '../hooks/useTableOfContents';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useRef } from 'react';
 
 export default function ReviewDetailPage() {
   const { reviewId } = useParams({ from: '/review/$reviewId' });
   const { data: reviews, isLoading: reviewsLoading } = useGetAllReviews();
   const { data: bikes, isLoading: bikesLoading } = useGetAllBikes();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { headings, activeId, scrollToHeading } = useTableOfContents(contentRef);
 
   const review = reviews?.find((r) => r.id.toString() === reviewId);
   const bike = bikes?.find((b) => b.id === review?.bikeId);
@@ -52,8 +59,19 @@ export default function ReviewDetailPage() {
         </Link>
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_250px_2fr_250px] gap-8">
+        {/* Left spacer for desktop TOC */}
+        <div className="hidden lg:block">
+          <div className="sticky top-24">
+            <TableOfContents headings={headings} activeId={activeId} onHeadingClick={scrollToHeading} />
+          </div>
+        </div>
+
+        {/* Main content */}
         <div className="lg:col-span-2 space-y-8">
+          {/* Mobile TOC */}
+          <MobileToc headings={headings} activeId={activeId} onHeadingClick={scrollToHeading} />
+
           {/* Header */}
           <div>
             <div className="flex items-start justify-between mb-4">
@@ -65,7 +83,9 @@ export default function ReviewDetailPage() {
                   </p>
                 )}
               </div>
-              <Badge variant="outline" className="ml-4">{review.region}</Badge>
+              <Badge variant="outline" className="ml-4">
+                {review.region}
+              </Badge>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>By {review.author}</span>
@@ -77,8 +97,8 @@ export default function ReviewDetailPage() {
           <Separator />
 
           {/* Content */}
-          <div className="prose prose-neutral dark:prose-invert max-w-none">
-            <p className="text-lg leading-relaxed">{review.content}</p>
+          <div ref={contentRef}>
+            <LongFormContent content={review.content} />
           </div>
 
           {bike && (
@@ -103,10 +123,14 @@ export default function ReviewDetailPage() {
           <CommentsPanel reviewId={review.id} />
         </div>
 
-        {/* Sidebar */}
+        {/* Right Sidebar */}
         <div className="space-y-6">
-          <ScoreBreakdown score={review.score} overallScore={avgScore} />
-          <RatingWidget reviewId={review.id} />
+          <div className="sticky top-24">
+            <ScoreBreakdown score={review.score} overallScore={avgScore} />
+            <div className="mt-6">
+              <RatingWidget reviewId={review.id} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

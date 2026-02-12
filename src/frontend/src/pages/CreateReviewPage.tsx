@@ -11,14 +11,20 @@ import { Slider } from '@/components/ui/slider';
 import RequireAuthAction from '../components/RequireAuthAction';
 import BikeSelector from '../components/BikeSelector';
 import { useCreateOrSaveReview, useGetAllBikes } from '../hooks/useQueries';
-import { Region, ContentStatus } from '../backend';
+import { Region, ContentStatus, ContentType } from '../backend';
 import { toast } from 'sonner';
+import { textareaToArray, normalizeRating } from '../utils/reviewFields';
 
 const regionOptions = [
   { value: 'asia', label: 'Asia' },
   { value: 'europe', label: 'Europe' },
   { value: 'usa', label: 'USA' },
   { value: 'middleEast', label: 'Middle East' },
+];
+
+const contentTypeOptions = [
+  { value: 'news', label: 'News' },
+  { value: 'review', label: 'Review' },
 ];
 
 export default function CreateReviewPage() {
@@ -31,11 +37,17 @@ export default function CreateReviewPage() {
   const [author, setAuthor] = useState('');
   const [bikeId, setBikeId] = useState<bigint | null>(null);
   const [region, setRegion] = useState<string>('');
+  const [contentType, setContentType] = useState<string>('news');
   
   const [performance, setPerformance] = useState(50);
   const [design, setDesign] = useState(50);
   const [comfort, setComfort] = useState(50);
   const [value, setValue] = useState(50);
+
+  // Review-specific fields
+  const [pros, setPros] = useState('');
+  const [cons, setCons] = useState('');
+  const [rating, setRating] = useState('0');
 
   const handleSubmit = async (status: ContentStatus) => {
     if (!title.trim() || !content.trim() || !author.trim() || bikeId === null || !region) {
@@ -57,6 +69,10 @@ export default function CreateReviewPage() {
           value,
         },
         status,
+        contentType: contentType as ContentType,
+        pros: textareaToArray(pros),
+        cons: textareaToArray(cons),
+        rating: normalizeRating(rating),
       });
       
       if (status === ContentStatus.published) {
@@ -70,6 +86,7 @@ export default function CreateReviewPage() {
   };
 
   const selectedBike = bikes.find((b) => b.id === bikeId);
+  const isReviewType = contentType === 'review';
 
   return (
     <div className="container max-w-4xl py-8">
@@ -93,6 +110,22 @@ export default function CreateReviewPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="contentType">Content Type</Label>
+                <Select value={contentType} onValueChange={setContentType}>
+                  <SelectTrigger id="contentType" className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contentTypeOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">Review Title</Label>
                 <Input
@@ -216,6 +249,47 @@ export default function CreateReviewPage() {
                   required
                 />
               </div>
+
+              {isReviewType && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-semibold">Review Details</h3>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="pros">Pros (one per line)</Label>
+                    <Textarea
+                      id="pros"
+                      placeholder="Enter pros, one per line..."
+                      value={pros}
+                      onChange={(e) => setPros(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cons">Cons (one per line)</Label>
+                    <Textarea
+                      id="cons"
+                      placeholder="Enter cons, one per line..."
+                      value={cons}
+                      onChange={(e) => setCons(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="rating">Overall Rating (0-100)</Label>
+                    <Input
+                      id="rating"
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="0"
+                      value={rating}
+                      onChange={(e) => setRating(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <Button

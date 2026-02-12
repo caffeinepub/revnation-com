@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import RequireAuthAction from '../components/RequireAuthAction';
 import { useCreateOrSaveArticle } from '../hooks/useQueries';
-import { Category, Region, ContentStatus } from '../backend';
+import { Category, Region, ContentStatus, ContentType } from '../backend';
 import { toast } from 'sonner';
 
 const categoryOptions = [
@@ -26,6 +26,11 @@ const regionOptions = [
   { value: 'middleEast', label: 'Middle East' },
 ];
 
+const contentTypeOptions = [
+  { value: 'news', label: 'News' },
+  { value: 'review', label: 'Review' },
+];
+
 export default function CreateArticlePage() {
   const navigate = useNavigate();
   const createOrSaveArticle = useCreateOrSaveArticle();
@@ -35,6 +40,7 @@ export default function CreateArticlePage() {
   const [author, setAuthor] = useState('');
   const [category, setCategory] = useState<string>('');
   const [region, setRegion] = useState<string>('');
+  const [contentType, setContentType] = useState<string>('news');
 
   const handleSubmit = async (status: ContentStatus) => {
     if (!title.trim() || !content.trim() || !author.trim() || !category || !region) {
@@ -50,6 +56,7 @@ export default function CreateArticlePage() {
         category: category as Category,
         region: region as Region,
         status,
+        contentType: contentType as ContentType,
       });
       
       if (status === ContentStatus.published) {
@@ -84,6 +91,22 @@ export default function CreateArticlePage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="contentType">Content Type</Label>
+                <Select value={contentType} onValueChange={setContentType}>
+                  <SelectTrigger id="contentType" className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contentTypeOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input

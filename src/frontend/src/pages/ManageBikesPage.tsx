@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetUserBikes, useDeleteBike, useSeedSampleBikes } from '../hooks/useQueries';
+import { useGetUserBikes, useDeleteBike, useSeedPopularBikes } from '../hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +32,7 @@ export default function ManageBikesPage() {
   const { data: bikes, isLoading } = useGetUserBikes();
   const { isAdmin } = useCurrentUser();
   const deleteBike = useDeleteBike();
-  const seedBikes = useSeedSampleBikes();
+  const seedBikes = useSeedPopularBikes();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingBike, setEditingBike] = useState<Bike | null>(null);

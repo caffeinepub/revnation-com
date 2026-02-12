@@ -1,54 +1,136 @@
 {
   "kind": "build_request",
-  "title": "Fix Create Bike submission and remove global palette bar (keep BikeForm palette)",
+  "title": "Add Review-only Pros/Cons/Rating fields and persist per document",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the Create Bike flow so that clicking the “Create Bike” submit button successfully creates a new bike entry and the new bike appears in the user’s bike list (Manage Bikes page) instead of showing an “action not available” error.",
-      "target": "both",
+      "text": "Extend the persisted document model so each saved document can store `contentType: \"news\" | \"review\"` and, when `contentType` is `\"review\"`, also store `pros`, `cons`, and `rating` alongside the document data (not editor-only UI state).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-2"
         ],
         "quotes": [
-          "when adding all the details, then i click on create bike it saying action not available.",
-          "“action not available” after clicking Create Bike. simple the bike should be created. it submit the form and create a new bike entry in your system."
+          "Save per document\n\nStore as:\n\ncontentType: \"news\" | \"review\"",
+          "They must be saved alongside the document in the database.",
+          "{\n  title: \"\",\n  content: \"\",\n  contentType: \"review\",\n  pros: [],\n  cons: [],\n  rating: 0\n}"
         ]
       },
       "acceptanceCriteria": [
-        "As an authenticated user on /manage-bikes, filling out the Create New Bike form and submitting results in a successful backend createBike call and returns a bike id.",
-        "After successful creation, the Manage Bikes list refreshes and includes the newly created bike without requiring a manual page refresh.",
-        "If creation fails (e.g., unauthorized or actor not ready), the UI shows a clear error message explaining the cause (not a generic “action not available”) and does not close the form."
+        "Backend types for stored documents include `contentType` (news/review) and include fields for `pros`, `cons`, and `rating` so they can be returned on load and persisted on save.",
+        "`pros` and `cons` are stored as arrays (as per the user’s structure example).",
+        "`rating` is stored as a number and defaults to 0 when not provided."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Remove the color-palette detection bar/UI element from the top of the website (global header/top-of-page area), while keeping the AI palette functionality inside the bike creation/edit form (BikeForm) unchanged and available.",
-      "target": "frontend",
+      "text": "Update backend create/save and fetch/query APIs for the relevant document type(s) so that `contentType`, `pros`, `cons`, and `rating` are persisted on save and returned on load, with defaults applied when fields are missing (default `contentType` to `news`, default `pros`/`cons` to empty arrays, default `rating` to 0).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-2"
         ],
         "quotes": [
-          "and remove the palette from the top of the website.",
-          "The colour-palette detection bar we previously added, but don't need to remove the AI palette we have on the bike form."
+          "Wire the dropdown value into the editor’s per-document load/save flow",
+          "default to `News` when no value exists",
+          "They must be saved alongside the document in the database."
         ]
       },
       "acceptanceCriteria": [
-        "No palette detection bar or palette-related UI is visible in the site-wide header/top-of-page area across pages.",
-        "The BikeForm still shows its palette-related functionality (no regression in the bike form palette UI/features)."
+        "Saving a document persists the selected `contentType` value and (when applicable) `pros`, `cons`, and `rating`.",
+        "Loading an existing document returns the saved `contentType`, `pros`, `cons`, and `rating` values.",
+        "If an older stored document lacks these fields, the API returns defaults (news / [] / [] / 0) rather than trapping or returning null/undefined in frontend types."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add/extend conditional Motoko migration logic to backfill existing stored documents so that upgrades do not lose data and older records receive default values for new fields (`contentType = #news` when missing; `pros = []`, `cons = []`, `rating = 0`).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Save per document",
+          "default to `News` when no value exists"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Upgrading the canister preserves all existing documents.",
+        "After upgrade, existing documents without `contentType` behave as `news` by default.",
+        "After upgrade, existing documents have `pros`/`cons` defaulted to empty arrays and `rating` defaulted to 0 (either via migration or via safe defaults in read paths, with migration used for stable-state correctness)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "In the document editor UI, provide a dropdown in the top toolbar with options `News` and `Review`, defaulting to `News`, and persist the selected value per document as `contentType: \"news\" | \"review\"`.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "Add a dropdown in the top toolbar\n\nOptions: News and Review\n\nDefault: News\n\nSave per document"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The editor UI shows a content type dropdown with exactly two options: News and Review.",
+        "The default selection for new documents is News.",
+        "When a saved document is loaded, the dropdown reflects the stored `contentType`."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "When the selected `contentType` is `Review`, conditionally render three optional static fields outside the editor content area (no custom editor nodes): Pros (textarea), Cons (textarea), Rating (number input). Hide them when `contentType` is `News`. Render/hide immediately on dropdown change and also correctly when loading an existing document.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1",
+          "msg-2"
+        ],
+        "quotes": [
+          "Render three optional static fields below the editor:\n\nPros (textarea)\n\nCons (textarea)\n\nRating (number input)\n\nDo not create custom editor nodes.\nDo not install new packages.\n\nKeep them outside Tiptap—simple form fields.",
+          "Immediately when user selects “Review”\n\nAnd also when loading an existing review document\n\nIf:\n\ncontentType = \"review\" → show fields\n\ncontentType = \"news\" → hide fields"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Pros/Cons/Rating fields are rendered only when `contentType` is `review` and are not part of the rich-text editor schema.",
+        "Switching the dropdown between News and Review shows/hides the fields immediately without animation complexity.",
+        "Loading a document with `contentType = review` shows the fields populated from stored values; loading with `news` hides them."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Persist the values of Pros, Cons, and Rating with the document on save, and restore them into the form on load. `pros` and `cons` must be stored as arrays; the UI must serialize/deserialize between the textarea representation and the array representation consistently.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "They must be saved alongside the document in the database.",
+          "pros: [],\n  cons: [],\n  rating: 0"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Saving a review-type document writes `pros`, `cons`, and `rating` to the backend and they are returned on subsequent loads.",
+        "`pros`/`cons` are stored as arrays in the backend interface; frontend converts to/from textarea content deterministically (no data loss across save/load).",
+        "For news-type documents, saving does not require Pros/Cons/Rating to be present; defaults are used when absent."
       ]
     }
   ],
   "constraints": [
-    "Frontend must not modify files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
-    "Backend changes must remain within the single Motoko actor (backend/main.mo); only add backend/migration.mo if an actual state migration is required."
+    "Do not create custom editor nodes.",
+    "Do not install new packages.",
+    "Keep Pros/Cons/Rating outside the rich-text editor as simple form fields.",
+    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add/adjust backend/migration.mo if state upgrade requires it.",
+    "Do not edit frontend files under frontend/src/components/ui or other immutablePaths listed in SYSTEM_CONTEXT; compose existing UI components instead."
   ],
   "nonGoals": [
-    "Do not remove or redesign the AI palette feature within the BikeForm.",
-    "Do not add new authentication providers beyond Internet Identity.",
-    "Do not add new bike-related features beyond fixing the create submission and removing the global palette bar."
+    "No advanced calculations or derived logic for the rating field.",
+    "No animation-heavy transitions for showing/hiding the review fields.",
+    "No new authentication providers or third-party integrations."
   ],
   "imageRequirements": {
     "required": [],

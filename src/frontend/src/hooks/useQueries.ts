@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Article, Review, Bike, Comment, Rating, UserProfile, Category, Region, ContentStatus, PriceRange, ColorOption, ImageType } from '../backend';
+import type { Article, Review, Bike, Comment, Rating, UserProfile, Category, Region, ContentStatus, ContentType, PriceRange, ColorOption, ImageType } from '../backend';
 import { toast } from 'sonner';
 
 // Articles - Public (published only)
@@ -29,6 +29,7 @@ export function useCreateOrSaveArticle() {
       category,
       region,
       status,
+      contentType,
     }: {
       title: string;
       content: string;
@@ -36,9 +37,10 @@ export function useCreateOrSaveArticle() {
       category: Category;
       region: Region;
       status: ContentStatus;
+      contentType?: ContentType;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createOrSaveArticle(title, content, author, category, region, status);
+      return actor.createOrSaveArticle(title, content, author, category, region, status, contentType || null);
     },
     onSuccess: (_, variables) => {
       if (variables.status === 'published') {
@@ -127,6 +129,10 @@ export function useCreateOrSaveReview() {
       bikeId,
       region,
       status,
+      contentType,
+      pros,
+      cons,
+      rating,
     }: {
       title: string;
       content: string;
@@ -135,9 +141,25 @@ export function useCreateOrSaveReview() {
       bikeId: bigint;
       region: Region;
       status: ContentStatus;
+      contentType?: ContentType;
+      pros?: string[];
+      cons?: string[];
+      rating?: number;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createOrSaveReview(title, content, author, score, bikeId, region, status);
+      return actor.createOrSaveReview(
+        title,
+        content,
+        author,
+        score,
+        bikeId,
+        region,
+        status,
+        contentType || null,
+        pros || [],
+        cons || [],
+        rating || 0
+      );
     },
     onSuccess: (_, variables) => {
       if (variables.status === 'published') {
@@ -265,9 +287,7 @@ export function useCreateBike() {
       colorOptions: ColorOption[];
       brandLogo: ImageType | null;
     }) => {
-      if (!actor) {
-        throw new Error('Please wait for the connection to be ready, then try again.');
-      }
+      if (!actor) throw new Error('Actor not available');
       return actor.createBike(name, brand, specs, priceRange, mainImages, details, region, colorOptions, brandLogo);
     },
     onSuccess: () => {
@@ -279,8 +299,8 @@ export function useCreateBike() {
       const message = error.message || 'Failed to create bike';
       if (message.includes('Unauthorized')) {
         toast.error('You must be signed in to create bikes');
-      } else if (message.includes('connection') || message.includes('ready')) {
-        toast.error('Connection not ready. Please wait a moment and try again.');
+      } else if (message.includes('Actor not available')) {
+        toast.error('Connection not ready. Please wait and try again.');
       } else {
         toast.error(message);
       }
@@ -316,23 +336,20 @@ export function useEditBike() {
       colorOptions: ColorOption[];
       brandLogo: ImageType | null;
     }) => {
-      if (!actor) {
-        throw new Error('Please wait for the connection to be ready, then try again.');
-      }
+      if (!actor) throw new Error('Actor not available');
       return actor.editBike(bikeId, name, brand, specs, priceRange, mainImages, details, region, colorOptions, brandLogo);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bikes'] });
       queryClient.invalidateQueries({ queryKey: ['userBikes'] });
-      queryClient.invalidateQueries({ queryKey: ['bike'] });
       toast.success('Bike updated successfully');
     },
     onError: (error: any) => {
       const message = error.message || 'Failed to update bike';
       if (message.includes('Unauthorized')) {
-        toast.error('You must be signed in to update bikes');
-      } else if (message.includes('connection') || message.includes('ready')) {
-        toast.error('Connection not ready. Please wait a moment and try again.');
+        toast.error('You do not have permission to edit this bike');
+      } else if (message.includes('Actor not available')) {
+        toast.error('Connection not ready. Please wait and try again.');
       } else {
         toast.error(message);
       }
@@ -355,12 +372,17 @@ export function useDeleteBike() {
       toast.success('Bike deleted successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete bike');
+      const message = error.message || 'Failed to delete bike';
+      if (message.includes('Unauthorized')) {
+        toast.error('You do not have permission to delete this bike');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }
 
-export function useSeedSampleBikes() {
+export function useSeedPopularBikes() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
@@ -371,10 +393,15 @@ export function useSeedSampleBikes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bikes'] });
-      toast.success('Sample bikes seeded successfully');
+      toast.success('Popular bikes seeded successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to seed sample bikes');
+      const message = error.message || 'Failed to seed bikes';
+      if (message.includes('Unauthorized')) {
+        toast.error('Only admins can seed bikes');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }
@@ -417,25 +444,6 @@ export function useCreateComment() {
   });
 }
 
-export function useDeleteComment() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ commentId, reviewId }: { commentId: bigint; reviewId: bigint }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.deleteComment(commentId);
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['comments', variables.reviewId.toString()] });
-      toast.success('Comment deleted successfully');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete comment');
-    },
-  });
-}
-
 export function useHideComment() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -450,7 +458,36 @@ export function useHideComment() {
       toast.success('Comment hidden successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to hide comment');
+      const message = error.message || 'Failed to hide comment';
+      if (message.includes('Unauthorized')) {
+        toast.error('Only admins can hide comments');
+      } else {
+        toast.error(message);
+      }
+    },
+  });
+}
+
+export function useDeleteComment() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ commentId, reviewId }: { commentId: bigint; reviewId: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteComment(commentId);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', variables.reviewId.toString()] });
+      toast.success('Comment deleted successfully');
+    },
+    onError: (error: any) => {
+      const message = error.message || 'Failed to delete comment';
+      if (message.includes('Unauthorized')) {
+        toast.error('You can only delete your own comments');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }
@@ -493,7 +530,34 @@ export function useRateReview() {
   });
 }
 
-// User Profiles
+// User Drafts
+export function useGetMyDraftArticles() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Article[]>({
+    queryKey: ['myDraftArticles'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMyDraftArticles();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetMyDraftReviews() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Review[]>({
+    queryKey: ['myDraftReviews'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMyDraftReviews();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// User Profile
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
@@ -528,39 +592,16 @@ export function useSaveCallerUserProfile() {
       toast.success('Profile saved successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to save profile');
+      const message = error.message || 'Failed to save profile';
+      if (message.includes('Unauthorized')) {
+        toast.error('You must be signed in to save your profile');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }
 
-// Drafts
-export function useGetMyDraftArticles() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<Article[]>({
-    queryKey: ['myDraftArticles'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getMyDraftArticles();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetMyDraftReviews() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<Review[]>({
-    queryKey: ['myDraftReviews'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getMyDraftReviews();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-// User Role
 export function useGetCallerUserRole() {
   const { actor, isFetching } = useActor();
 
@@ -569,6 +610,19 @@ export function useGetCallerUserRole() {
     queryFn: async () => {
       if (!actor) return 'guest';
       return actor.getCallerUserRole();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetBrandLogos() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['brandLogos'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getBrandLogos();
     },
     enabled: !!actor && !isFetching,
   });
