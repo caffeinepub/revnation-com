@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-expose-the-sample-bike-seeding-capability-in-the-frontend-as-an-admin-only-action-and-refresh-bike-listings-after-seeding-completes",
-      "featureTitle": "Expose the sample-bike seeding capability in the frontend as an admin-only action, and refresh bike listings after seeding completes.",
+      "featureId": "feature-fix-markdown-table-ingestion-so-msrp-price-values-are-detected-and-auto-filled-even-when-the-left-column-label-contains-extra-text-e-g-msrp-global-est-the-parser-must-successfully-extract-the-currency-range-from-values-like-19-500-21-000-usd-and-populate-the-existing-min-max-price-fields",
+      "featureTitle": "Fix Markdown table ingestion so MSRP/price values are detected and auto-filled even when the left-column label contains extra text (e.g., \"MSRP (Global Est.)\"). The parser must successfully extract the currency range from values like \"$19,500 – $21,000 USD\" and populate the existing min/max price fields.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/ManageBikesPage.tsx"
+        "frontend/src/utils/markdownSpecs.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -14,10 +13,32 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-29"
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-allow-users-to-edit-an-existing-per-section-color-palette-after-creation-by-clicking-an-existing-color-swatch-and-updating-it-to-a-new-hex-color-value-instead-of-the-palette-becoming-locked-uneditable",
+      "featureTitle": "Allow users to edit an existing per-section color palette after creation by clicking an existing color swatch and updating it to a new hex color value (instead of the palette becoming locked/uneditable).",
+      "files": [
+        "frontend/src/components/PaletteSwatchEditDialog.tsx",
+        "frontend/src/pages/SectionPalettesPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
       ],
       "confidence": "high"
     }

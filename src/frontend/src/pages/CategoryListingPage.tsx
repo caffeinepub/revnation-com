@@ -6,15 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@tanstack/react-router';
 import RegionFilter from '../components/RegionFilter';
-import { useState } from 'react';
 import type { Region } from '../backend';
 import { Star } from 'lucide-react';
+import { useRegionContext } from '../hooks/useRegionContext';
 
 export default function CategoryListingPage() {
   const { categoryId } = useParams({ from: '/category/$categoryId' });
   const { data: articles, isLoading: articlesLoading } = useGetAllArticles();
   const { data: reviews, isLoading: reviewsLoading } = useGetAllReviews();
-  const [selectedRegion, setSelectedRegion] = useState<Region | 'all'>('all');
+  const { selectedRegion, setSelectedRegion } = useRegionContext();
 
   const isLoading = articlesLoading || reviewsLoading;
 

@@ -1,58 +1,58 @@
 {
   "kind": "build_request",
-  "title": "Add admin-triggered sample bike seeding (predefined popular models)",
+  "title": "Fix Markdown price parsing and enable editing existing color swatches",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-28",
-      "text": "Add a backend admin-only method that seeds (inserts) a predefined list of sample/popular bike entries into the existing Bikes store, without requiring any file upload.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "automatic sample bikes added (predefined popular models)",
-          "do it"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend exposes a new shared method (e.g., seedSampleBikes) callable only by admins; non-admin callers receive an Unauthorized-style error.",
-        "The method inserts multiple predefined Bike records (with name, brand, specs, priceRange, images, details, region) using the existing Bike schema.",
-        "The method is safe to call more than once (it does not create duplicate bikes for the same predefined entries; duplicates are skipped or otherwise prevented).",
-        "The method returns a useful result (e.g., number of bikes inserted) or otherwise provides an unambiguous success response."
-      ]
-    },
-    {
-      "id": "REQ-29",
-      "text": "Expose the sample-bike seeding capability in the frontend as an admin-only action, and refresh bike listings after seeding completes.",
+      "id": "REQ-1",
+      "text": "Fix Markdown table ingestion so MSRP/price values are detected and auto-filled even when the left-column label contains extra text (e.g., \"MSRP (Global Est.)\"). The parser must successfully extract the currency range from values like \"$19,500 – $21,000 USD\" and populate the existing min/max price fields.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "bulk/sample bike support",
-          "automatic sample bikes added (predefined popular models)"
+          "when i add the markdown table its not filling the prices",
+          "| MSRP (Global Est.) | $19,500 – $21,000 USD |"
         ]
       },
       "acceptanceCriteria": [
-        "React Query includes a new mutation hook to call the backend sample seeding method, with appropriate error handling and success messaging in English.",
-        "The UI shows a clearly labeled admin-only control (e.g., a button on the Manage Bikes page) to trigger sample seeding; non-admin authenticated users and unauthenticated users do not see it.",
-        "Triggering the action shows a confirmation step before inserting the sample bikes.",
-        "On success, the frontend invalidates/refetches relevant queries so that newly seeded bikes appear without a manual refresh (at minimum: the public bikes query and the user/admin bikes management list where applicable).",
-        "If the backend rejects the call as unauthorized, the UI displays a clear English error message and does not modify the UI state."
+        "Pasting the provided Markdown table into the BikeForm \"Paste Specs\" area and clicking Apply sets both Min Price and Max Price based on the MSRP row.",
+        "The MSRP row is detected when the key includes text like \"MSRP (Global Est.)\" (i.e., matching is not limited to exact equality with \"msrp\").",
+        "Price extraction works with commas, currency symbols, en-dashes/em-dashes, and trailing currency codes (e.g., USD).",
+        "If no price row is present, existing price inputs remain unchanged."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Allow users to edit an existing per-section color palette after creation by clicking an existing color swatch and updating it to a new hex color value (instead of the palette becoming locked/uneditable).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "users be able to click an existing colour swatch and edit it",
+          "the pallets are getting locked when coluir are added"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On the Section Palettes page, clicking an existing displayed palette color opens an edit UI (e.g., dialog/popover) that lets the user enter/select a new hex color.",
+        "Saving the edit replaces only the clicked color entry in that section’s palette (no unintended regeneration of the palette).",
+        "Edited values are validated/normalized to a 6-digit hex code (consistent with existing validation behavior).",
+        "The existing remove-color control continues to work for each palette color."
       ]
     }
   ],
   "constraints": [
-    "Do not implement CSV/JSON upload or any file-based bulk import flow; sample bikes must be inserted from a predefined list.",
-    "Respect the single-actor Motoko backend architecture (all logic in backend/main.mo).",
-    "Do not edit files under frontend/src/components/ui or any other frontend immutablePaths."
+    "Use English for any user-facing text.",
+    "Do not modify files under frontend/src/components/ui or any other frontend immutable paths listed in SYSTEM_CONTEXT.",
+    "Keep all backend logic in backend/main.mo; do not introduce additional backend services."
   ],
   "nonGoals": [
-    "Building a general-purpose bulk import pipeline (CSV/JSON parsing, drag-and-drop upload, etc.).",
-    "Adding external databases or third-party integrations to store or source sample bikes."
+    "Do not add new authentication providers beyond Internet Identity.",
+    "Do not change the rule that palettes auto-generate only when a section is created (editing text should not automatically regenerate palettes).",
+    "Do not introduce external databases or third-party APIs."
   ],
   "imageRequirements": {
     "required": [],

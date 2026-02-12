@@ -5,11 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import { useSaveUserProfile } from '../hooks/useQueries';
+import { useSaveCallerUserProfile } from '../hooks/useQueries';
 
 export default function ProfileSetupDialog() {
   const { userProfile, isAuthenticated, profileLoading, isFetched } = useCurrentUser();
-  const saveProfile = useSaveUserProfile();
+  const saveProfile = useSaveCallerUserProfile();
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
 
@@ -26,7 +26,7 @@ export default function ProfileSetupDialog() {
     <Dialog open={showProfileSetup} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Welcome to Moto Global</DialogTitle>
+          <DialogTitle>Welcome to RevNation</DialogTitle>
           <DialogDescription>
             Please set up your profile to continue. This helps us personalize your experience.
           </DialogDescription>

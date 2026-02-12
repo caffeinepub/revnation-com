@@ -15,6 +15,7 @@ import BikeDetailPage from './pages/BikeDetailPage';
 import ManageBikesPage from './pages/ManageBikesPage';
 import BrandsPage from './pages/BrandsPage';
 import BrandDetailPage from './pages/BrandDetailPage';
+import SectionPalettesPage from './pages/SectionPalettesPage';
 import { Toaster } from '@/components/ui/sonner';
 
 const rootRoute = createRootRoute({
@@ -105,6 +106,12 @@ const brandDetailRoute = createRoute({
   component: BrandDetailPage,
 });
 
+const sectionPalettesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/section-palettes',
+  component: SectionPalettesPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   categoryRoute,
@@ -120,6 +127,7 @@ const routeTree = rootRoute.addChildren([
   manageBikesRoute,
   brandsRoute,
   brandDetailRoute,
+  sectionPalettesRoute,
 ]);
 
 const router = createRouter({ routeTree });

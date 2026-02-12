@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetUserBikes, useDeleteBike, useSeedPopularBikeEntries } from '../hooks/useQueries';
+import { useGetUserBikes, useDeleteBike, useSeedSampleBikes } from '../hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,7 @@ export default function ManageBikesPage() {
   const { data: bikes, isLoading } = useGetUserBikes();
   const { isAdmin } = useCurrentUser();
   const deleteBike = useDeleteBike();
-  const seedBikes = useSeedPopularBikeEntries();
+  const seedBikes = useSeedSampleBikes();
   const [showForm, setShowForm] = useState(false);
   const [editingBike, setEditingBike] = useState<Bike | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -73,6 +73,18 @@ export default function ManageBikesPage() {
   const handleSeedConfirm = async () => {
     await seedBikes.mutateAsync();
     setSeedDialogOpen(false);
+  };
+
+  const getImageUrl = (bike: Bike) => {
+    if (bike.mainImages && bike.mainImages.length > 0) {
+      const firstImage = bike.mainImages[0];
+      if (firstImage.__kind__ === 'uploaded') {
+        return firstImage.uploaded.getDirectURL();
+      } else {
+        return firstImage.linked;
+      }
+    }
+    return '/assets/generated/bike-placeholder.dim_1200x800.png';
   };
 
   return (
@@ -135,13 +147,13 @@ export default function ManageBikesPage() {
                     <Card key={bike.id.toString()} className="overflow-hidden">
                       <div className="aspect-video relative bg-muted">
                         <img
-                          src={
-                            bike.images.length > 0
-                              ? bike.images[0]
-                              : '/assets/bike-placeholder.dim_1200x800.png'
-                          }
+                          src={getImageUrl(bike)}
                           alt={bike.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/assets/generated/bike-placeholder.dim_1200x800.png';
+                          }}
                         />
                       </div>
                       <CardContent className="p-6">
@@ -220,35 +232,24 @@ export default function ManageBikesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteBike.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleteBike.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteBike.isPending ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Seed Sample Bikes Confirmation Dialog */}
+      {/* Seed Confirmation Dialog */}
       <AlertDialog open={seedDialogOpen} onOpenChange={setSeedDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Seed Sample Bikes</AlertDialogTitle>
             <AlertDialogDescription>
-              This will add a predefined set of popular motorcycle models to the database. This action is safe to run multiple times as duplicate entries will be handled automatically.
+              This will add sample motorcycle entries to the database. Continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={seedBikes.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleSeedConfirm}
-              disabled={seedBikes.isPending}
-            >
-              {seedBikes.isPending ? 'Adding Bikes...' : 'Confirm'}
-            </AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSeedConfirm}>Seed Bikes</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

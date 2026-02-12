@@ -25,13 +25,19 @@ export interface Article {
 export interface Bike {
   'id' : bigint,
   'region' : Region,
+  'colorOptions' : Array<ColorOption>,
   'name' : string,
   'createdBy' : Principal,
+  'mainImages' : Array<ImageType>,
   'priceRange' : PriceRange,
   'specs' : string,
   'details' : string,
   'brand' : string,
-  'images' : Array<string>,
+  'brandLogo' : [] | [ImageType],
+}
+export interface BrandLogo {
+  'logos' : Array<[string, ImageType]>,
+  'brandName' : string,
 }
 export type Category = { 'reviews' : null } |
   { 'comparisons' : null } |
@@ -40,6 +46,11 @@ export type Category = { 'reviews' : null } |
   { 'racing' : null } |
   { 'electric' : null } |
   { 'buyingGuides' : null };
+export interface ColorOption {
+  'colorCode' : string,
+  'name' : string,
+  'images' : Array<ImageType>,
+}
 export interface Comment {
   'id' : bigint,
   'content' : string,
@@ -50,6 +61,9 @@ export interface Comment {
 }
 export type ContentStatus = { 'published' : null } |
   { 'draft' : null };
+export type ExternalBlob = Uint8Array;
+export type ImageType = { 'uploaded' : ExternalBlob } |
+  { 'linked' : string };
 export interface PriceRange { 'max' : bigint, 'min' : bigint }
 export interface Rating {
   'createdAt' : TimeValue,
@@ -85,11 +99,47 @@ export interface UserProfile { 'bio' : string, 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createBike' : ActorMethod<
-    [string, string, string, PriceRange, Array<string>, string, Region],
+    [
+      string,
+      string,
+      string,
+      PriceRange,
+      Array<ImageType>,
+      string,
+      Region,
+      Array<ColorOption>,
+      [] | [ImageType],
+    ],
     bigint
   >,
   'createComment' : ActorMethod<[bigint, string], bigint>,
@@ -106,13 +156,25 @@ export interface _SERVICE {
   'deleteComment' : ActorMethod<[bigint], undefined>,
   'deleteReview' : ActorMethod<[bigint], undefined>,
   'editBike' : ActorMethod<
-    [bigint, string, string, string, PriceRange, Array<string>, string, Region],
+    [
+      bigint,
+      string,
+      string,
+      string,
+      PriceRange,
+      Array<ImageType>,
+      string,
+      Region,
+      Array<ColorOption>,
+      [] | [ImageType],
+    ],
     undefined
   >,
   'getAllBikes' : ActorMethod<[], Array<Bike>>,
   'getAllPublishedArticles' : ActorMethod<[], Array<Article>>,
   'getAllPublishedReviews' : ActorMethod<[], Array<Review>>,
   'getBikeById' : ActorMethod<[bigint], [] | [Bike]>,
+  'getBrandLogos' : ActorMethod<[], Array<BrandLogo>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCommentsByReview' : ActorMethod<[bigint], Array<Comment>>,

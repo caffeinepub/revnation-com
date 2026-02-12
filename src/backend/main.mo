@@ -1,18 +1,22 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
-import Text "mo:core/Text";
 import Array "mo:core/Array";
-import Iter "mo:core/Iter";
 import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 import Nat8 "mo:core/Nat8";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
+import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import MixinStorage "blob-storage/Mixin";
+
+
 
 actor {
+  include MixinStorage();
+
   public type Category = {
     #news;
     #reviews;
@@ -44,6 +48,17 @@ actor {
 
   public type TimeValue = Int;
   public type ContentStatus = { #draft; #published };
+
+  public type ImageType = {
+    #uploaded : Storage.ExternalBlob;
+    #linked : Text;
+  };
+
+  public type ColorOption = {
+    name : Text;
+    colorCode : Text;
+    images : [ImageType];
+  };
 
   public type Review = {
     id : Nat;
@@ -78,10 +93,12 @@ actor {
     brand : Text;
     specs : Text;
     priceRange : PriceRange;
-    images : [Text];
+    mainImages : [ImageType];
     details : Text;
     region : Region;
+    colorOptions : [ColorOption];
     createdBy : Principal;
+    brandLogo : ?ImageType;
   };
 
   public type Comment = {
@@ -105,6 +122,11 @@ actor {
     bio : Text;
   };
 
+  public type BrandLogo = {
+    brandName : Text;
+    logos : [(Text, ImageType)];
+  };
+
   module NatPrincipalTuple {
     public func compare(tuple1 : (Nat, Principal), tuple2 : (Nat, Principal)) : Order.Order {
       switch (Nat.compare(tuple1.0, tuple2.0)) {
@@ -125,6 +147,9 @@ actor {
   var comments = List.empty<Comment>();
   let ratings = Map.empty<(Nat, Principal), Rating>();
   let userProfiles = Map.empty<Principal, UserProfile>();
+  let brandLogos = Map.empty<Text, Map.Map<Text, ImageType>>();
+
+  var popularBikeCount : Nat = 0;
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -141,13 +166,15 @@ actor {
         brand = "Yamaha";
         specs = "998cc, 200hp, 199kg";
         priceRange = { min = 17399; max = 18000 };
-        images = [
-          "https://example.com/yamaha1.jpg",
-          "https://example.com/yamaha2.jpg",
-        ];
+        mainImages = [];
         details = "Superbike with advanced electronics and lightweight frame";
         region = #asia;
+        colorOptions = [
+          { name = "Racing Blue"; colorCode = "#2A3FA7"; images = [] },
+          { name = "Matte Black"; colorCode = "#1C1C1C"; images = [] },
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
       {
         id = nextBikeId + 1;
@@ -155,13 +182,15 @@ actor {
         brand = "Honda";
         specs = "999cc, 189hp, 196kg";
         priceRange = { min = 16000; max = 17500 };
-        images = [
-          "https://example.com/honda1.jpg",
-          "https://example.com/honda2.jpg",
-        ];
+        mainImages = [];
         details = "Track-focused superbike with reliability and performance";
         region = #asia;
+        colorOptions = [
+          { name = "Grand Prix Red"; colorCode = "#D62934"; images = [] },
+          { name = "Matte Black"; colorCode = "#1C1C1C"; images = [] }
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
       {
         id = nextBikeId + 2;
@@ -169,13 +198,15 @@ actor {
         brand = "Suzuki";
         specs = "1340cc, 187hp, 264kg";
         priceRange = { min = 15999; max = 17000 };
-        images = [
-          "https://example.com/hayabusa1.jpg",
-          "https://example.com/hayabusa2.jpg",
-        ];
+        mainImages = [];
         details = "Hyperbike known for top speed and grand touring comfort";
         region = #asia;
+        colorOptions = [
+          { name = "Pearl White"; colorCode = "#F2F2F2"; images = [] },
+          { name = "Glass Sparkle Black"; colorCode = "#282B29"; images = [] },
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
       {
         id = nextBikeId + 3;
@@ -183,13 +214,16 @@ actor {
         brand = "BMW";
         specs = "999cc, 205hp, 197kg";
         priceRange = { min = 19995; max = 23000 };
-        images = [
-          "https://example.com/bmw1.jpg",
-          "https://example.com/bmw2.jpg",
-        ];
+        mainImages = [];
         details = "High-performance superbike with state-of-the-art electronics";
         region = #europe;
+        colorOptions = [
+          { name = "Motorsport Colors"; colorCode = "#CF0A2C"; images = [] },
+          { name = "Black Storm Metallic"; colorCode = "#252525";
+            images = [] },
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
       {
         id = nextBikeId + 4;
@@ -197,13 +231,15 @@ actor {
         brand = "Kawasaki";
         specs = "998cc, 203hp, 207kg";
         priceRange = { min = 16499; max = 17000 };
-        images = [
-          "https://example.com/kawasaki1.jpg",
-          "https://example.com/kawasaki2.jpg",
-        ];
+        mainImages = [];
         details = "World Superbike championship-winning technology";
         region = #asia;
+        colorOptions = [
+          { name = "Lime Green"; colorCode = "#23881A"; images = [] },
+          { name = "Metallic Black"; colorCode = "#343A40"; images = [] },
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
       {
         id = nextBikeId + 5;
@@ -211,13 +247,15 @@ actor {
         brand = "BMW";
         specs = "999cc, 205hp, 197kg";
         priceRange = { min = 19995; max = 23000 };
-        images = [
-          "https://example.com/bmw1.jpg",
-          "https://example.com/bmw2.jpg",
-        ];
+        mainImages = [];
         details = "High-performance superbike with state-of-the-art electronics";
         region = #europe;
+        colorOptions = [
+          { name = "Motorsport Colors"; colorCode = "#CF0A2C"; images = [] },
+          { name = "Black Storm Metallic"; colorCode = "#252525"; images = [] },
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
       {
         id = nextBikeId + 6;
@@ -225,13 +263,15 @@ actor {
         brand = "Triumph";
         specs = "1160cc, 177hp, 198kg";
         priceRange = { min = 17995; max = 20000 };
-        images = [
-          "https://example.com/triumph1.jpg",
-          "https://example.com/triumph2.jpg",
-        ];
+        mainImages = [];
         details = "Naked sportbike with strong performance and comfort";
         region = #europe;
+        colorOptions = [
+          { name = "Crystal White"; colorCode = "#FFFFFF"; images = [] },
+          { name = "Sapphire Black"; colorCode = "#0E0E0E"; images = [] },
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
       {
         id = nextBikeId + 7;
@@ -239,18 +279,21 @@ actor {
         brand = "Ducati";
         specs = "1103cc, 214hp, 198kg";
         priceRange = { min = 21995; max = 30000 };
-        images = [
-          "https://example.com/ducati1.jpg",
-          "https://example.com/ducati2.jpg",
-        ];
+        mainImages = [];
         details = "Italian superbike combining performance and style";
         region = #europe;
+        colorOptions = [
+          { name = "Ducati Red"; colorCode = "#EF233C"; images = [] },
+          { name = "Dark Stealth"; colorCode = "#333333"; images = [] },
+        ];
         createdBy = Principal.fromText("qa6aq-aaaaa-aaaam-qbrla-cai");
+        brandLogo = null;
       },
     ];
 
     bikes.addAll(popularBikes.values());
     nextBikeId += 8;
+    popularBikeCount := popularBikeCount + popularBikes.size();
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -489,23 +532,28 @@ actor {
     brand : Text,
     specs : Text,
     priceRange : PriceRange,
-    images : [Text],
+    mainImages : [ImageType],
     details : Text,
     region : Region,
+    colorOptions : [ColorOption],
+    brandLogo : ?ImageType,
   ) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create bikes");
     };
+
     let bike : Bike = {
       id = nextBikeId;
       name;
       brand;
       specs;
       priceRange;
-      images;
+      mainImages;
       details;
       region;
+      colorOptions;
       createdBy = caller;
+      brandLogo;
     };
     bikes.add(bike);
     nextBikeId += 1;
@@ -518,9 +566,11 @@ actor {
     brand : Text,
     specs : Text,
     priceRange : PriceRange,
-    images : [Text],
+    mainImages : [ImageType],
     details : Text,
     region : Region,
+    colorOptions : [ColorOption],
+    brandLogo : ?ImageType,
   ) : async () {
     let bikesArray = bikes.toArray();
     let bikeOpt = bikesArray.find(func(b : Bike) : Bool { b.id == bikeId });
@@ -540,10 +590,12 @@ actor {
                 brand;
                 specs;
                 priceRange;
-                images;
+                mainImages;
                 details;
                 region;
+                colorOptions;
                 createdBy = b.createdBy;
+                brandLogo;
               };
             } else {
               b;
@@ -704,6 +756,14 @@ actor {
     };
     bikes.toArray().filter(
       func(bike) { bike.createdBy == caller }
+    );
+  };
+
+  public query func getBrandLogos() : async [BrandLogo] {
+    brandLogos.toArray().map(
+      func((k, v)) {
+        { brandName = k; logos = v.toArray() };
+      }
     );
   };
 };

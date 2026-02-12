@@ -78,8 +78,8 @@ export default function CommentsPanel({ reviewId }: CommentsPanelProps) {
                       commentId={comment.id}
                       isOwner={comment.author.toString() === userProfile?.name}
                       isAdmin={isAdmin}
-                      onDelete={() => deleteComment.mutate(comment.id)}
-                      onHide={() => hideComment.mutate(comment.id)}
+                      onDelete={() => deleteComment.mutate({ commentId: comment.id, reviewId })}
+                      onHide={() => hideComment.mutate({ commentId: comment.id, reviewId })}
                     />
                   )}
                 </div>

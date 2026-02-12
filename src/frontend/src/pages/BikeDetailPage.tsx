@@ -1,11 +1,13 @@
-import { useParams, Link, useNavigate } from '@tanstack/react-router';
+import { useParams, useNavigate } from '@tanstack/react-router';
 import { useGetBikeById } from '../hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, DollarSign, MapPin } from 'lucide-react';
+import { ArrowLeft, DollarSign, MapPin, Palette } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import BikeImageGallery from '../components/BikeImageGallery';
+import ImageLightbox from '../components/ImageLightbox';
+import { useState } from 'react';
 
 const regionLabels: Record<string, string> = {
   asia: 'Asia',
@@ -17,12 +19,31 @@ const regionLabels: Record<string, string> = {
 export default function BikeDetailPage() {
   const { bikeId } = useParams({ from: '/bike/$bikeId' });
   const navigate = useNavigate();
-  const { data: bike, isLoading } = useGetBikeById(BigInt(bikeId));
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(null);
+  
+  // Safely parse bikeId - validate it's a valid bigint string
+  let parsedBikeId: bigint | null = null;
+  let isInvalidId = false;
+  
+  try {
+    // Check if bikeId contains only digits
+    if (/^\d+$/.test(bikeId)) {
+      parsedBikeId = BigInt(bikeId);
+    } else {
+      isInvalidId = true;
+    }
+  } catch (error) {
+    isInvalidId = true;
+  }
+
+  const { data: bike, isLoading } = useGetBikeById(parsedBikeId);
 
   if (isLoading) {
     return (
       <div className="container py-12">
-        <div className="max-w-5xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-8">
           <Skeleton className="h-12 w-3/4" />
           <Skeleton className="h-96 w-full" />
           <Skeleton className="h-64 w-full" />
@@ -31,11 +52,31 @@ export default function BikeDetailPage() {
     );
   }
 
+  if (isInvalidId) {
+    return (
+      <div className="container py-12">
+        <div className="max-w-6xl mx-auto">
+          <Card className="border-destructive/50">
+            <CardContent className="py-12 text-center space-y-4">
+              <h2 className="text-2xl font-bold">Invalid Link</h2>
+              <p className="text-muted-foreground">
+                The link you followed is not valid. Please check the URL and try again.
+              </p>
+              <Button onClick={() => navigate({ to: '/brands' })}>
+                Browse Brands
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (!bike) {
     return (
       <div className="container py-12">
-        <div className="max-w-5xl mx-auto">
-          <Card>
+        <div className="max-w-6xl mx-auto">
+          <Card className="border-muted">
             <CardContent className="py-12 text-center space-y-4">
               <h2 className="text-2xl font-bold">Bike Not Found</h2>
               <p className="text-muted-foreground">
@@ -59,137 +100,145 @@ export default function BikeDetailPage() {
     }).format(Number(price));
   };
 
-  const hasImages = bike.images && bike.images.length > 0;
-  const displayImages = hasImages ? bike.images : ['/assets/generated/bike-placeholder.dim_1200x800.png'];
+  // Determine which images to display - convert ImageType to string URLs
+  const getDisplayImages = (): string[] => {
+    // If a color is selected and has images, use them
+    if (selectedColorIndex !== null && bike.colorOptions[selectedColorIndex]?.images?.length > 0) {
+      const colorImages = bike.colorOptions[selectedColorIndex].images;
+      return colorImages.map(img => {
+        if (img.__kind__ === 'uploaded') {
+          return img.uploaded.getDirectURL();
+        } else {
+          return img.linked;
+        }
+      });
+    }
+    // Otherwise use main images or placeholder
+    if (bike.mainImages && bike.mainImages.length > 0) {
+      return bike.mainImages.map(img => {
+        if (img.__kind__ === 'uploaded') {
+          return img.uploaded.getDirectURL();
+        } else {
+          return img.linked;
+        }
+      });
+    }
+    return ['/assets/generated/bike-placeholder.dim_1200x800.png'];
+  };
+
+  const displayImages = getDisplayImages();
+
+  const handleOpenLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const handleColorSelect = (index: number) => {
+    setSelectedColorIndex(index);
+  };
 
   return (
     <div className="container py-12">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8">
         {/* Back Button */}
-        <Button variant="ghost" onClick={() => navigate({ to: '/brands' })} className="gap-2">
+        <Button variant="ghost" onClick={() => navigate({ to: '/brands' })} className="gap-2 hover:gap-3 transition-all">
           <ArrowLeft className="h-4 w-4" />
           Back to Brands
         </Button>
 
         {/* Header */}
         <div className="space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold tracking-tight">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="space-y-3">
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
                 {bike.brand} {bike.name}
               </h1>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="gap-1">
-                  <MapPin className="h-3 w-3" />
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="gap-1.5 px-3 py-1">
+                  <MapPin className="h-3.5 w-3.5" />
                   {regionLabels[bike.region] || bike.region}
                 </Badge>
+                {bike.priceRange.min > BigInt(0) && (
+                  <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                    <DollarSign className="h-3.5 w-3.5" />
+                    {formatPrice(bike.priceRange.min)} - {formatPrice(bike.priceRange.max)}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
         </div>
 
         {/* Image Gallery */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-              {displayImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="relative aspect-video rounded-lg overflow-hidden bg-muted"
-                >
-                  <img
-                    src={image}
-                    alt={`${bike.brand} ${bike.name} - Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/assets/generated/bike-placeholder.dim_1200x800.png';
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
+        <Card className="overflow-hidden border-border/60 shadow-sm">
+          <CardContent className="p-6">
+            <BikeImageGallery images={displayImages} onImageClick={handleOpenLightbox} />
           </CardContent>
         </Card>
 
-        {/* Price Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Pricing
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {bike.priceRange.min === 0n && bike.priceRange.max === 0n ? (
-              <p className="text-muted-foreground">Price information not available</p>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold">
-                    {formatPrice(bike.priceRange.min)}
-                  </span>
-                  {bike.priceRange.max > bike.priceRange.min && (
-                    <>
-                      <span className="text-muted-foreground">to</span>
-                      <span className="text-3xl font-bold">
-                        {formatPrice(bike.priceRange.max)}
-                      </span>
-                    </>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Price range may vary by region and configuration
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Specifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Specifications</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {bike.specs ? (
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <p className="whitespace-pre-wrap">{bike.specs}</p>
-              </div>
-            ) : (
-              <p className="text-muted-foreground">No specifications available</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Details */}
-        {bike.details && (
-          <Card>
+        {/* Color Options */}
+        {bike.colorOptions && bike.colorOptions.length > 0 && (
+          <Card className="border-border/60 shadow-sm">
             <CardHeader>
-              <CardTitle>Details</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Palette className="h-5 w-5" />
+                Available Colours
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <p className="whitespace-pre-wrap">{bike.details}</p>
+              <div className="flex flex-wrap gap-3">
+                {bike.colorOptions.map((color, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleColorSelect(index)}
+                    className={`group flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all hover:shadow-md ${
+                      selectedColorIndex === index
+                        ? 'border-primary bg-primary/5 shadow-md'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full border-2 border-border shadow-sm"
+                      style={{ backgroundColor: color.colorCode }}
+                    />
+                    <span className="font-medium text-sm">{color.name}</span>
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>
         )}
 
-        <Separator />
+        {/* Specifications */}
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl">Specifications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">{bike.specs}</p>
+          </CardContent>
+        </Card>
 
-        {/* Actions */}
-        <div className="flex gap-4">
-          <Button asChild>
-            <Link to="/compare">Compare with Other Bikes</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/brands/$brandId" params={{ brandId: encodeURIComponent(bike.brand.toLowerCase()) }}>
-              View More from {bike.brand}
-            </Link>
-          </Button>
-        </div>
+        {/* Details */}
+        {bike.details && (
+          <Card className="border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl">Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">{bike.details}</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Lightbox */}
+      <ImageLightbox
+        images={displayImages}
+        initialIndex={lightboxIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 }

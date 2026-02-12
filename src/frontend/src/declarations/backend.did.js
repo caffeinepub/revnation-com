@@ -8,17 +8,38 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  'method' : IDL.Text,
+  'blob_hash' : IDL.Text,
+});
+export const _CaffeineStorageRefillInformation = IDL.Record({
+  'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const _CaffeineStorageRefillResult = IDL.Record({
+  'success' : IDL.Opt(IDL.Bool),
+  'topped_up_amount' : IDL.Opt(IDL.Nat),
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
 export const PriceRange = IDL.Record({ 'max' : IDL.Nat, 'min' : IDL.Nat });
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
+export const ImageType = IDL.Variant({
+  'uploaded' : ExternalBlob,
+  'linked' : IDL.Text,
+});
 export const Region = IDL.Variant({
   'usa' : IDL.Null,
   'europe' : IDL.Null,
   'asia' : IDL.Null,
   'middleEast' : IDL.Null,
+});
+export const ColorOption = IDL.Record({
+  'colorCode' : IDL.Text,
+  'name' : IDL.Text,
+  'images' : IDL.Vec(ImageType),
 });
 export const Category = IDL.Variant({
   'reviews' : IDL.Null,
@@ -42,13 +63,15 @@ export const Score = IDL.Record({
 export const Bike = IDL.Record({
   'id' : IDL.Nat,
   'region' : Region,
+  'colorOptions' : IDL.Vec(ColorOption),
   'name' : IDL.Text,
   'createdBy' : IDL.Principal,
+  'mainImages' : IDL.Vec(ImageType),
   'priceRange' : PriceRange,
   'specs' : IDL.Text,
   'details' : IDL.Text,
   'brand' : IDL.Text,
-  'images' : IDL.Vec(IDL.Text),
+  'brandLogo' : IDL.Opt(ImageType),
 });
 export const TimeValue = IDL.Int;
 export const Article = IDL.Record({
@@ -76,6 +99,10 @@ export const Review = IDL.Record({
   'score' : Score,
   'bikeId' : IDL.Nat,
 });
+export const BrandLogo = IDL.Record({
+  'logos' : IDL.Vec(IDL.Tuple(IDL.Text, ImageType)),
+  'brandName' : IDL.Text,
+});
 export const UserProfile = IDL.Record({ 'bio' : IDL.Text, 'name' : IDL.Text });
 export const Comment = IDL.Record({
   'id' : IDL.Nat,
@@ -93,6 +120,32 @@ export const Rating = IDL.Record({
 });
 
 export const idlService = IDL.Service({
+  '_caffeineStorageBlobIsLive' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Bool],
+      ['query'],
+    ),
+  '_caffeineStorageBlobsToDelete' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      ['query'],
+    ),
+  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [],
+      [],
+    ),
+  '_caffeineStorageCreateCertificate' : IDL.Func(
+      [IDL.Text],
+      [_CaffeineStorageCreateCertificateResult],
+      [],
+    ),
+  '_caffeineStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_CaffeineStorageRefillInformation)],
+      [_CaffeineStorageRefillResult],
+      [],
+    ),
+  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createBike' : IDL.Func(
@@ -101,9 +154,11 @@ export const idlService = IDL.Service({
         IDL.Text,
         IDL.Text,
         PriceRange,
-        IDL.Vec(IDL.Text),
+        IDL.Vec(ImageType),
         IDL.Text,
         Region,
+        IDL.Vec(ColorOption),
+        IDL.Opt(ImageType),
       ],
       [IDL.Nat],
       [],
@@ -130,9 +185,11 @@ export const idlService = IDL.Service({
         IDL.Text,
         IDL.Text,
         PriceRange,
-        IDL.Vec(IDL.Text),
+        IDL.Vec(ImageType),
         IDL.Text,
         Region,
+        IDL.Vec(ColorOption),
+        IDL.Opt(ImageType),
       ],
       [],
       [],
@@ -141,6 +198,7 @@ export const idlService = IDL.Service({
   'getAllPublishedArticles' : IDL.Func([], [IDL.Vec(Article)], ['query']),
   'getAllPublishedReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
   'getBikeById' : IDL.Func([IDL.Nat], [IDL.Opt(Bike)], ['query']),
+  'getBrandLogos' : IDL.Func([], [IDL.Vec(BrandLogo)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCommentsByReview' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], ['query']),
@@ -167,17 +225,38 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+    'method' : IDL.Text,
+    'blob_hash' : IDL.Text,
+  });
+  const _CaffeineStorageRefillInformation = IDL.Record({
+    'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const _CaffeineStorageRefillResult = IDL.Record({
+    'success' : IDL.Opt(IDL.Bool),
+    'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
   const PriceRange = IDL.Record({ 'max' : IDL.Nat, 'min' : IDL.Nat });
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
+  const ImageType = IDL.Variant({
+    'uploaded' : ExternalBlob,
+    'linked' : IDL.Text,
+  });
   const Region = IDL.Variant({
     'usa' : IDL.Null,
     'europe' : IDL.Null,
     'asia' : IDL.Null,
     'middleEast' : IDL.Null,
+  });
+  const ColorOption = IDL.Record({
+    'colorCode' : IDL.Text,
+    'name' : IDL.Text,
+    'images' : IDL.Vec(ImageType),
   });
   const Category = IDL.Variant({
     'reviews' : IDL.Null,
@@ -201,13 +280,15 @@ export const idlFactory = ({ IDL }) => {
   const Bike = IDL.Record({
     'id' : IDL.Nat,
     'region' : Region,
+    'colorOptions' : IDL.Vec(ColorOption),
     'name' : IDL.Text,
     'createdBy' : IDL.Principal,
+    'mainImages' : IDL.Vec(ImageType),
     'priceRange' : PriceRange,
     'specs' : IDL.Text,
     'details' : IDL.Text,
     'brand' : IDL.Text,
-    'images' : IDL.Vec(IDL.Text),
+    'brandLogo' : IDL.Opt(ImageType),
   });
   const TimeValue = IDL.Int;
   const Article = IDL.Record({
@@ -235,6 +316,10 @@ export const idlFactory = ({ IDL }) => {
     'score' : Score,
     'bikeId' : IDL.Nat,
   });
+  const BrandLogo = IDL.Record({
+    'logos' : IDL.Vec(IDL.Tuple(IDL.Text, ImageType)),
+    'brandName' : IDL.Text,
+  });
   const UserProfile = IDL.Record({ 'bio' : IDL.Text, 'name' : IDL.Text });
   const Comment = IDL.Record({
     'id' : IDL.Nat,
@@ -252,6 +337,32 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
+    '_caffeineStorageBlobIsLive' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Bool],
+        ['query'],
+      ),
+    '_caffeineStorageBlobsToDelete' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
+    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [],
+        [],
+      ),
+    '_caffeineStorageCreateCertificate' : IDL.Func(
+        [IDL.Text],
+        [_CaffeineStorageCreateCertificateResult],
+        [],
+      ),
+    '_caffeineStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_CaffeineStorageRefillInformation)],
+        [_CaffeineStorageRefillResult],
+        [],
+      ),
+    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createBike' : IDL.Func(
@@ -260,9 +371,11 @@ export const idlFactory = ({ IDL }) => {
           IDL.Text,
           IDL.Text,
           PriceRange,
-          IDL.Vec(IDL.Text),
+          IDL.Vec(ImageType),
           IDL.Text,
           Region,
+          IDL.Vec(ColorOption),
+          IDL.Opt(ImageType),
         ],
         [IDL.Nat],
         [],
@@ -289,9 +402,11 @@ export const idlFactory = ({ IDL }) => {
           IDL.Text,
           IDL.Text,
           PriceRange,
-          IDL.Vec(IDL.Text),
+          IDL.Vec(ImageType),
           IDL.Text,
           Region,
+          IDL.Vec(ColorOption),
+          IDL.Opt(ImageType),
         ],
         [],
         [],
@@ -300,6 +415,7 @@ export const idlFactory = ({ IDL }) => {
     'getAllPublishedArticles' : IDL.Func([], [IDL.Vec(Article)], ['query']),
     'getAllPublishedReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
     'getBikeById' : IDL.Func([IDL.Nat], [IDL.Opt(Bike)], ['query']),
+    'getBrandLogos' : IDL.Func([], [IDL.Vec(BrandLogo)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCommentsByReview' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], ['query']),

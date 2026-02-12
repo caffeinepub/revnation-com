@@ -1,13 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Let admins seed a predefined set of popular/sample bikes into the Bikes store from the app (no file uploads), and have the UI refresh to show them.
+**Goal:** Improve BikeForm Markdown spec ingestion so MSRP prices auto-fill reliably, and allow editing existing section palette color swatches after creation.
 
 **Planned changes:**
-- Add an admin-only backend shared method (e.g., `seedSampleBikes`) in `backend/main.mo` that inserts a predefined list of Bike records using the existing Bike schema.
-- Ensure seeding is safe to run multiple times by preventing duplicates for the predefined entries (skip or otherwise avoid re-inserting the same bikes).
-- Return a clear success response from the backend (e.g., number inserted and/or number skipped).
-- Add a new React Query mutation to call the backend seeding method with English success/error messaging and unauthorized handling.
-- Add an admin-only UI control (with a confirmation step) to trigger seeding (e.g., on the Manage Bikes page) and invalidate/refetch relevant bike queries after success.
+- Update Markdown table parsing to detect MSRP/price rows even when the left-column label includes additional text (e.g., “MSRP (Global Est.)”), and extract min/max prices from currency ranges like “$19,500 – $21,000 USD”.
+- Ensure price parsing supports commas, currency symbols, en-dashes/em-dashes, and trailing currency codes, and does not overwrite existing price inputs when no price row is found.
+- Enable editing of an existing per-section palette color by clicking a swatch to open an edit UI and saving a new validated/normalized 6-digit hex value, without regenerating the rest of the palette.
+- Keep existing per-color remove controls working for palette entries.
 
-**User-visible outcome:** Admin users can click a “Seed sample bikes” action (after confirming) to automatically add predefined popular bikes; the bike lists update immediately to include the new entries, while non-admin users never see the control.
+**User-visible outcome:** Pasting a Markdown table into BikeForm “Paste Specs” and applying it correctly fills Min Price and Max Price from MSRP ranges, and users can click any existing section palette swatch to edit its hex color while leaving the rest of the palette unchanged.

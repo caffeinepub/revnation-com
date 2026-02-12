@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Article, Review, Bike, Comment, Rating, UserProfile, Category, Region, ContentStatus, PriceRange } from '../backend';
+import type { Article, Review, Bike, Comment, Rating, UserProfile, Category, Region, ContentStatus, PriceRange, ColorOption, ImageType } from '../backend';
 import { toast } from 'sonner';
 
 // Articles - Public (published only)
@@ -60,19 +60,6 @@ export function useCreateOrSaveArticle() {
   });
 }
 
-export function useGetMyDraftArticles() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<Article[]>({
-    queryKey: ['myDraftArticles'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getMyDraftArticles();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
 export function usePublishArticle() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -89,6 +76,26 @@ export function usePublishArticle() {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to publish article');
+    },
+  });
+}
+
+export function useDeleteArticle() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (articleId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteArticle(articleId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+      queryClient.invalidateQueries({ queryKey: ['myDraftArticles'] });
+      toast.success('Article deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete article');
     },
   });
 }
@@ -152,19 +159,6 @@ export function useCreateOrSaveReview() {
   });
 }
 
-export function useGetMyDraftReviews() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<Review[]>({
-    queryKey: ['myDraftReviews'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getMyDraftReviews();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
 export function usePublishReview() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -181,6 +175,26 @@ export function usePublishReview() {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to publish review');
+    },
+  });
+}
+
+export function useDeleteReview() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reviewId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteReview(reviewId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['myDraftReviews'] });
+      toast.success('Review deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete review');
     },
   });
 }
@@ -235,20 +249,24 @@ export function useCreateBike() {
       brand,
       specs,
       priceRange,
-      images,
+      mainImages,
       details,
       region,
+      colorOptions,
+      brandLogo,
     }: {
       name: string;
       brand: string;
       specs: string;
       priceRange: PriceRange;
-      images: string[];
+      mainImages: ImageType[];
       details: string;
       region: Region;
+      colorOptions: ColorOption[];
+      brandLogo: ImageType | null;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createBike(name, brand, specs, priceRange, images, details, region);
+      return actor.createBike(name, brand, specs, priceRange, mainImages, details, region, colorOptions, brandLogo);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bikes'] });
@@ -277,35 +295,34 @@ export function useEditBike() {
       brand,
       specs,
       priceRange,
-      images,
+      mainImages,
       details,
       region,
+      colorOptions,
+      brandLogo,
     }: {
       bikeId: bigint;
       name: string;
       brand: string;
       specs: string;
       priceRange: PriceRange;
-      images: string[];
+      mainImages: ImageType[];
       details: string;
       region: Region;
+      colorOptions: ColorOption[];
+      brandLogo: ImageType | null;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.editBike(bikeId, name, brand, specs, priceRange, images, details, region);
+      return actor.editBike(bikeId, name, brand, specs, priceRange, mainImages, details, region, colorOptions, brandLogo);
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bikes'] });
-      queryClient.invalidateQueries({ queryKey: ['bike', variables.bikeId.toString()] });
       queryClient.invalidateQueries({ queryKey: ['userBikes'] });
+      queryClient.invalidateQueries({ queryKey: ['bike'] });
       toast.success('Bike updated successfully');
     },
     onError: (error: any) => {
-      const message = error.message || 'Failed to update bike';
-      if (message.includes('Unauthorized')) {
-        toast.error('You must be signed in to edit bikes');
-      } else {
-        toast.error(message);
-      }
+      toast.error(error.message || 'Failed to update bike');
     },
   });
 }
@@ -325,17 +342,12 @@ export function useDeleteBike() {
       toast.success('Bike deleted successfully');
     },
     onError: (error: any) => {
-      const message = error.message || 'Failed to delete bike';
-      if (message.includes('Unauthorized')) {
-        toast.error('You must be signed in to delete bikes');
-      } else {
-        toast.error(message);
-      }
+      toast.error(error.message || 'Failed to delete bike');
     },
   });
 }
 
-export function useSeedPopularBikeEntries() {
+export function useSeedSampleBikes() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
@@ -346,31 +358,25 @@ export function useSeedPopularBikeEntries() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bikes'] });
-      queryClient.invalidateQueries({ queryKey: ['userBikes'] });
-      toast.success('Sample bikes added successfully');
+      toast.success('Sample bikes seeded successfully');
     },
     onError: (error: any) => {
-      const message = error.message || 'Failed to seed sample bikes';
-      if (message.includes('Unauthorized')) {
-        toast.error('Only administrators can seed sample bikes');
-      } else {
-        toast.error(message);
-      }
+      toast.error(error.message || 'Failed to seed sample bikes');
     },
   });
 }
 
 // Comments
-export function useGetCommentsByReview(reviewId: bigint) {
+export function useGetCommentsByReview(reviewId: bigint | null) {
   const { actor, isFetching } = useActor();
 
   return useQuery<Comment[]>({
-    queryKey: ['comments', reviewId.toString()],
+    queryKey: ['comments', reviewId?.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor || !reviewId) return [];
       return actor.getCommentsByReview(reviewId);
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && reviewId !== null,
   });
 }
 
@@ -388,7 +394,12 @@ export function useCreateComment() {
       toast.success('Comment posted successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to post comment');
+      const message = error.message || 'Failed to post comment';
+      if (message.includes('Unauthorized')) {
+        toast.error('You must be signed in to comment');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }
@@ -398,13 +409,13 @@ export function useDeleteComment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (commentId: bigint) => {
+    mutationFn: async ({ commentId, reviewId }: { commentId: bigint; reviewId: bigint }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.deleteComment(commentId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments'] });
-      toast.success('Comment deleted');
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', variables.reviewId.toString()] });
+      toast.success('Comment deleted successfully');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to delete comment');
@@ -417,13 +428,13 @@ export function useHideComment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (commentId: bigint) => {
+    mutationFn: async ({ commentId, reviewId }: { commentId: bigint; reviewId: bigint }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.hideComment(commentId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments'] });
-      toast.success('Comment hidden');
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', variables.reviewId.toString()] });
+      toast.success('Comment hidden successfully');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to hide comment');
@@ -432,16 +443,16 @@ export function useHideComment() {
 }
 
 // Ratings
-export function useGetReviewRatings(reviewId: bigint) {
+export function useGetReviewRatings(reviewId: bigint | null) {
   const { actor, isFetching } = useActor();
 
   return useQuery<Rating[]>({
-    queryKey: ['ratings', reviewId.toString()],
+    queryKey: ['ratings', reviewId?.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor || !reviewId) return [];
       return actor.getReviewRatings(reviewId);
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && reviewId !== null,
   });
 }
 
@@ -456,15 +467,20 @@ export function useRateReview() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ratings', variables.reviewId.toString()] });
-      toast.success('Rating submitted');
+      toast.success('Rating submitted successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to submit rating');
+      const message = error.message || 'Failed to submit rating';
+      if (message.includes('Unauthorized')) {
+        toast.error('You must be signed in to rate');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }
 
-// User Profile
+// User Profiles
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
@@ -485,7 +501,7 @@ export function useGetCallerUserProfile() {
   };
 }
 
-export function useSaveUserProfile() {
+export function useSaveCallerUserProfile() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
@@ -504,27 +520,42 @@ export function useSaveUserProfile() {
   });
 }
 
-export function useGetCallerUserRole() {
+// Drafts
+export function useGetMyDraftArticles() {
   const { actor, isFetching } = useActor();
 
-  return useQuery({
-    queryKey: ['currentUserRole'],
+  return useQuery<Article[]>({
+    queryKey: ['myDraftArticles'],
     queryFn: async () => {
-      if (!actor) return 'guest';
-      return actor.getCallerUserRole();
+      if (!actor) return [];
+      return actor.getMyDraftArticles();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useIsCallerAdmin() {
+export function useGetMyDraftReviews() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Review[]>({
+    queryKey: ['myDraftReviews'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getMyDraftReviews();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// User Role
+export function useGetCallerUserRole() {
   const { actor, isFetching } = useActor();
 
   return useQuery({
-    queryKey: ['isAdmin'],
+    queryKey: ['userRole'],
     queryFn: async () => {
-      if (!actor) return false;
-      return actor.isCallerAdmin();
+      if (!actor) return 'guest';
+      return actor.getCallerUserRole();
     },
     enabled: !!actor && !isFetching,
   });

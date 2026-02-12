@@ -7,19 +7,31 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface UserProfile {
-    bio: string;
+export class ExternalBlob {
+    getBytes(): Promise<Uint8Array<ArrayBuffer>>;
+    getDirectURL(): string;
+    static fromURL(url: string): ExternalBlob;
+    static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
+    withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
+}
+export interface Bike {
+    id: bigint;
+    region: Region;
+    colorOptions: Array<ColorOption>;
     name: string;
+    createdBy: Principal;
+    mainImages: Array<ImageType>;
+    priceRange: PriceRange;
+    specs: string;
+    details: string;
+    brand: string;
+    brandLogo?: ImageType;
 }
 export interface Rating {
     createdAt: TimeValue;
     user: Principal;
     rating: number;
     reviewId: bigint;
-}
-export interface PriceRange {
-    max: bigint;
-    min: bigint;
 }
 export interface Comment {
     id: bigint;
@@ -29,24 +41,17 @@ export interface Comment {
     author: Principal;
     reviewId: bigint;
 }
-export interface Bike {
-    id: bigint;
-    region: Region;
-    name: string;
-    createdBy: Principal;
-    priceRange: PriceRange;
-    specs: string;
-    details: string;
-    brand: string;
-    images: Array<string>;
+export interface BrandLogo {
+    logos: Array<[string, ImageType]>;
+    brandName: string;
 }
+export type TimeValue = bigint;
 export interface Score {
     value: number;
     design: number;
     comfort: number;
     performance: number;
 }
-export type TimeValue = bigint;
 export interface Article {
     id: bigint;
     region: Region;
@@ -59,6 +64,22 @@ export interface Article {
     author: string;
     category: Category;
 }
+export interface ColorOption {
+    colorCode: string;
+    name: string;
+    images: Array<ImageType>;
+}
+export interface PriceRange {
+    max: bigint;
+    min: bigint;
+}
+export type ImageType = {
+    __kind__: "uploaded";
+    uploaded: ExternalBlob;
+} | {
+    __kind__: "linked";
+    linked: string;
+};
 export interface Review {
     id: bigint;
     region: Region;
@@ -71,6 +92,10 @@ export interface Review {
     author: string;
     score: Score;
     bikeId: bigint;
+}
+export interface UserProfile {
+    bio: string;
+    name: string;
 }
 export enum Category {
     reviews = "reviews",
@@ -98,7 +123,7 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createBike(name: string, brand: string, specs: string, priceRange: PriceRange, images: Array<string>, details: string, region: Region): Promise<bigint>;
+    createBike(name: string, brand: string, specs: string, priceRange: PriceRange, mainImages: Array<ImageType>, details: string, region: Region, colorOptions: Array<ColorOption>, brandLogo: ImageType | null): Promise<bigint>;
     createComment(reviewId: bigint, content: string): Promise<bigint>;
     createOrSaveArticle(title: string, content: string, author: string, category: Category, region: Region, status: ContentStatus): Promise<bigint>;
     createOrSaveReview(title: string, content: string, author: string, score: Score, bikeId: bigint, region: Region, status: ContentStatus): Promise<bigint>;
@@ -106,11 +131,12 @@ export interface backendInterface {
     deleteBike(bikeId: bigint): Promise<void>;
     deleteComment(commentId: bigint): Promise<void>;
     deleteReview(reviewId: bigint): Promise<void>;
-    editBike(bikeId: bigint, name: string, brand: string, specs: string, priceRange: PriceRange, images: Array<string>, details: string, region: Region): Promise<void>;
+    editBike(bikeId: bigint, name: string, brand: string, specs: string, priceRange: PriceRange, mainImages: Array<ImageType>, details: string, region: Region, colorOptions: Array<ColorOption>, brandLogo: ImageType | null): Promise<void>;
     getAllBikes(): Promise<Array<Bike>>;
     getAllPublishedArticles(): Promise<Array<Article>>;
     getAllPublishedReviews(): Promise<Array<Review>>;
     getBikeById(bikeId: bigint): Promise<Bike | null>;
+    getBrandLogos(): Promise<Array<BrandLogo>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCommentsByReview(reviewId: bigint): Promise<Array<Comment>>;

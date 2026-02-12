@@ -1,206 +1,27 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 13,
-  "summary": "AI-powered global motorcycle news and reviews website with comparisons, AI summaries/recommendations, regional support, and premium dark-mode UI.",
-  "architectural_notes": [
-    "Introduce a structured content-block system for Articles and Bike Details to support multiple inline images and YouTube embed blocks throughout the body."
-  ],
+  "projectStateVersion": 3,
+  "summary": "App that ingests a markdown table to auto-fill pricing fields and generates color palettes that users can edit via clickable swatches.",
+  "architectural_notes": [],
   "known_issues": [
-    "After signing in, the UI does not show “Create Article” / “Create Review” buttons, blocking content creation.",
-    "Domain validation error shown: “Domain revnation.com must be between 5 and 50 characters and contain only letters, numbers, and hyphens.” (rejection of revnation.com).",
-    "Clicking an existing created bike opens a 'Bike Not Found' page (bike detail routing/lookup failing for created bike)."
+    "Markdown table paste does not auto-fill price/MSRP fields.",
+    "Color palette becomes locked after colors are added; users cannot edit existing swatches."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-add-a-homepage-that-highlights-1-trending-bikes-section-2-latest-launches-carousel-and-3-entry-points-to-the-main-categories-news-reviews-comparisons-electric-racing-concepts-buying-guides-with-a-premium-fast-loading-layout",
-      "title": "Add a homepage that highlights: (1) Trending bikes section, (2) Latest launches carousel, and (3) entry points to the main categories (News, Reviews, Comparisons, Electric, Racing, Concepts, Buying Guides) with a premium, fast-loading layout.",
+      "id": "feature-fix-markdown-table-ingestion-so-msrp-price-values-are-detected-and-auto-filled-even-when-the-left-column-label-contains-extra-text-e-g-msrp-global-est-the-parser-must-successfully-extract-the-currency-range-from-values-like-19-500-21-000-usd-and-populate-the-existing-min-max-price-fields",
+      "title": "Fix Markdown table ingestion so MSRP/price values are detected and auto-filled even when the left-column label contains extra text (e.g., \"MSRP (Global Est.)\"). The parser must successfully extract the currency range from values like \"$19,500 – $21,000 USD\" and populate the existing min/max price fields.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-allow-users-to-edit-an-existing-per-section-color-palette-after-creation-by-clicking-an-existing-color-swatch-and-updating-it-to-a-new-hex-color-value-instead-of-the-palette-becoming-locked-uneditable",
+      "title": "Allow users to edit an existing per-section color palette after creation by clicking an existing color swatch and updating it to a new hex color value (instead of the palette becoming locked/uneditable).",
       "reqIds": [
         "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-category-listing-pages-for-each-category-that-support-filtering-by-region-asia-europe-usa-middle-east-and-sorting-by-latest",
-      "title": "Create category listing pages for each category that support filtering by region (Asia, Europe, USA, Middle East) and sorting by latest.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-detailed-review-page-ui-that-presents-design-notes-engine-specs-performance-mileage-range-comfort-reliability-and-value-for-money-plus-an-overall-rating-derived-from-the-sub-scores",
-      "title": "Create a detailed Review page UI that presents: design notes, engine specs, performance, mileage/range, comfort, reliability, and value for money, plus an overall rating derived from the sub-scores.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-a-bike-vs-bike-comparison-tool-that-lets-users-select-two-bikes-and-view-a-side-by-side-comparison-of-key-specs-and-review-derived-metrics-when-available",
-      "title": "Implement a Bike vs Bike comparison tool that lets users select two bikes and view a side-by-side comparison of key specs and review-derived metrics (when available).",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-ai-generated-quick-read-summaries-for-articles-and-reviews-using-an-on-canister-deterministic-summarization-approach-no-external-ai-services-and-display-the-summary-prominently-on-detail-pages",
-      "title": "Implement AI-generated quick-read summaries for articles and reviews using an on-canister, deterministic summarization approach (no external AI services), and display the summary prominently on detail pages.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-site-search-with-ai-style-recommendations-using-on-canister-ranking-e-g-keyword-tag-relevance-and-provide-a-search-bar-in-the-global-header-that-returns-results-across-news-reviews-guides-and-bikes",
-      "title": "Implement site search with AI-style recommendations using on-canister ranking (e.g., keyword + tag relevance) and provide a search bar in the global header that returns results across news, reviews, guides, and bikes.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-beginner-friendly-buying-guides-pages-and-structure-templates-components-that-support-step-by-step-guidance-checklists-and-regional-notes-while-maintaining-a-professional-unbiased-tone",
-      "title": "Add beginner-friendly Buying Guides pages and structure (templates/components) that support step-by-step guidance, checklists, and regional notes, while maintaining a professional, unbiased tone.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-provide-an-expert-analysis-presentation-pattern-for-enthusiast-level-content-e-g-deeper-technical-sections-data-callouts-and-pros-cons-usable-within-news-and-reviews",
-      "title": "Provide an 'Expert Analysis' presentation pattern for enthusiast-level content (e.g., deeper technical sections, data callouts, and pros/cons), usable within News and Reviews.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-user-comments-and-a-rating-system-on-review-pages-and-optionally-on-bikes-including-create-read-flows-and-basic-moderation-controls-delete-hide-for-the-content-owner-admin",
-      "title": "Implement user comments and a rating system on review pages (and optionally on bikes), including create/read flows and basic moderation controls (delete/hide) for the content owner/admin.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-authentication-via-internet-identity-and-use-it-to-gate-user-actions-commenting-rating-while-keeping-read-access-public",
-      "title": "Add authentication via Internet Identity and use it to gate user actions (commenting, rating), while keeping read access public.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-design-and-implement-a-clean-futuristic-minimal-premium-automotive-visual-theme-with-an-optional-dark-mode-applied-consistently-across-the-entire-frontend-typography-spacing-cards-buttons-navigation-and-content-readability-do-not-use-a-blue-purple-dominant-palette",
-      "title": "Design and implement a clean, futuristic, minimal, premium automotive visual theme with an optional dark mode, applied consistently across the entire frontend (typography, spacing, cards, buttons, navigation, and content readability). Do not use a blue/purple dominant palette.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-all-user-visible-site-branding-from-moto-global-to-revnation-and-align-the-site-document-title-with-the-revnation-com-brand",
-      "title": "Update all user-visible site branding from “Moto Global” to “RevNation” and align the site document title with the revnation.com brand.",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-replace-the-current-wordmark-logo-asset-used-by-the-header-with-a-revnation-wordmark-image-and-serve-it-as-a-static-asset-from-frontend-public-assets-generated",
-      "title": "Replace the current wordmark logo asset used by the header with a RevNation wordmark image and serve it as a static asset from frontend/public/assets/generated.",
-      "reqIds": [
-        "REQ-14"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-visible-content-creation-entry-points-in-the-ui-so-that-authenticated-users-can-access-create-article-and-create-review-actions-and-unauthenticated-users-do-not-see-these-actions-or-are-prompted-to-sign-in",
-      "title": "Add visible content-creation entry points in the UI so that authenticated users can access “Create Article” and “Create Review” actions, and unauthenticated users do not see these actions (or are prompted to sign in).",
-      "reqIds": [
-        "REQ-15"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-dedicated-routes-and-pages-for-creating-new-articles-and-new-reviews-including-forms-that-call-the-backend-createarticle-and-createreview-methods-and-redirect-to-the-newly-created-detail-page-on-success",
-      "title": "Add dedicated routes and pages for creating new articles and new reviews, including forms that call the backend createArticle and createReview methods, and redirect to the newly created detail page on success.",
-      "reqIds": [
-        "REQ-16"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-extend-the-frontend-react-query-layer-to-include-mutations-for-creating-articles-and-reviews-and-any-required-query-invalidation-so-newly-created-content-appears-in-listings-and-detail-pages-without-manual-refresh",
-      "title": "Extend the frontend React Query layer to include mutations for creating articles and reviews (and any required query invalidation) so newly created content appears in listings and detail pages without manual refresh.",
-      "reqIds": [
-        "REQ-17"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-draft-vs-published-status-to-articles-and-reviews-so-authenticated-users-can-save-content-as-a-draft-not-publicly-visible-and-later-publish-it-to-make-it-live",
-      "title": "Add a draft vs published status to Articles and Reviews so authenticated users can save content as a draft (not publicly visible) and later publish it to make it live.",
-      "reqIds": [
-        "REQ-18"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-create-article-and-create-review-pages-to-support-saving-as-draft-and-publishing-live-including-clear-english-user-facing-labels",
-      "title": "Update the Create Article and Create Review pages to support saving as draft and publishing live, including clear English user-facing labels.",
-      "reqIds": [
-        "REQ-20"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-extend-the-react-query-layer-to-support-draft-related-operations-and-ensure-query-invalidation-updates-public-lists-and-draft-lists-appropriately",
-      "title": "Extend the React Query layer to support draft-related operations and ensure query invalidation updates public lists and draft lists appropriately.",
-      "reqIds": [
-        "REQ-21"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-dedicated-bike-detail-page-and-route-that-displays-a-bike-s-images-pricing-specs-and-detailed-description-with-clear-empty-placeholder-states-when-data-is-missing",
-      "title": "Add a dedicated Bike Detail page and route that displays a bike’s images, pricing, specs, and detailed description, with clear empty/placeholder states when data is missing.",
-      "reqIds": [
-        "REQ-24"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-authenticated-bike-management-panels-pages-that-let-signed-in-users-create-and-edit-bikes-including-specs-prices-images-and-details-and-delete-bikes-they-own-unauthenticated-users-must-not-see-these-controls-or-must-be-prompted-to-sign-in",
-      "title": "Create authenticated bike management panels/pages that let signed-in users create and edit bikes (including specs, prices, images, and details) and delete bikes they own; unauthenticated users must not see these controls (or must be prompted to sign in).",
-      "reqIds": [
-        "REQ-25"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-extend-the-react-query-data-layer-to-include-bike-mutations-create-update-delete-and-ensure-query-invalidation-keeps-bike-listings-bike-detail-pages-and-brand-pages-consistent",
-      "title": "Extend the React Query data layer to include bike mutations (create/update/delete) and ensure query invalidation keeps bike listings, bike detail pages, and brand pages consistent.",
-      "reqIds": [
-        "REQ-26"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-brand-based-browsing-and-search-ux-provide-a-brands-page-brand-list-and-brand-detail-page-bikes-filtered-by-brand-and-update-the-existing-search-results-behavior-so-bike-results-link-to-bike-detail-pages-and-brand-matches-are-discoverable",
-      "title": "Add brand-based browsing and search UX: provide a Brands page (brand list) and Brand detail page (bikes filtered by brand), and update the existing search results behavior so bike results link to Bike Detail pages and brand matches are discoverable.",
-      "reqIds": [
-        "REQ-27"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-expose-the-sample-bike-seeding-capability-in-the-frontend-as-an-admin-only-action-and-refresh-bike-listings-after-seeding-completes",
-      "title": "Expose the sample-bike seeding capability in the frontend as an admin-only action, and refresh bike listings after seeding completes.",
-      "reqIds": [
-        "REQ-29"
       ],
       "version": 1
     }
@@ -208,149 +29,18 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Global motorcycle news coverage with categories (News, Racing, Technology, Concepts, Electric, etc.)",
+      "summary": "Fix markdown table ingestion so MSRP/price values are detected and auto-filled (e.g., parse currency ranges like \"$19,500 – $21,000 USD\").",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Detailed motorcycle review pages including specs, performance, mileage, comfort, reliability, and value scoring",
+      "summary": "Allow editing existing color palettes after creation by clicking a color swatch to modify it (remove/avoid palette locking).",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Bike-vs-bike comparison tool",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "AI-generated quick-read summaries for articles and reviews",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Beginner-friendly buying guides and expert-level analysis content sections",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Clean, futuristic, minimal UI with optional dark mode; fast-loading and responsive premium automotive feel",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Region support for content (Asia, Europe, USA, Middle East)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Search bar with AI-powered recommendations",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Homepage modules: trending bikes section and latest launches carousel",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "User comments and rating system on content/bikes",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Implement core backend data models and CRUD flows for motorcycle content, including: Articles (news/analysis/guides), Reviews (with structured scoring fields), Bikes (specs used for comparisons), and metadata for Category (News, Reviews, Comparisons, Electric, Racing, Concepts, Buying Guides) and Region (Asia, Europe, USA, Middle East).",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Add/restore authenticated content-creation UI: show “Create Article” and “Create Review” buttons/forms after Internet Identity login, enabling adding News and Bike Reviews from the frontend.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "Update backend canister APIs to support draft creation, draft listing for the caller, and publishing actions with correct access control.",
-      "reqIds": [
-        "REQ-19"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-15",
-      "summary": "Create admin/content panels and frontend pages for bike data: specs, pricing, images, and detailed bike information pages.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-16",
-      "summary": "Add brand-based browsing/search (search by motorcycle brand) to help users find bikes by manufacturer.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-17",
-      "summary": "Extend the backend Bike data model to support richer bike information, including: (a) structured price fields, (b) a list of image references, and (c) a long-form details field; and expose query/update methods needed by the frontend to create, edit, and delete bikes.",
-      "reqIds": [
-        "REQ-22"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-18",
-      "summary": "Add a conditional backend state migration so existing deployed state can be upgraded safely to the new Bike schema with sensible defaults for any newly added fields.",
-      "reqIds": [
-        "REQ-23"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-19",
-      "summary": "Add inline media blocks (multiple images + YouTube embeds) within Article content editor and Bike Specs/Bike Detail editor, with placement options.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-20",
-      "summary": "Add a Privacy Policy section/page under the website navigation.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-21",
-      "summary": "Add brand logo support: logo field on Brand create/edit and display on Brand detail (and wherever brand is shown).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-22",
-      "summary": "Support automatic bulk/sample bike seeding: insert a predefined list of popular bike models via an admin action (no file upload).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-23",
-      "summary": "Add a backend admin-only method that seeds (inserts) a predefined list of sample/popular bike entries into the existing Bikes store, without requiring any file upload.",
-      "reqIds": [
-        "REQ-28"
-      ],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "revnation.com",
+  "projectName": "Fix Markdown price parsing and enable editing existing color swatches",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -9,7 +9,7 @@ interface RegionFilterProps {
 export default function RegionFilter({ selectedRegion, onRegionChange }: RegionFilterProps) {
   return (
     <Tabs value={selectedRegion} onValueChange={(value) => onRegionChange(value as Region | 'all')}>
-      <TabsList>
+      <TabsList className="bg-muted/50">
         <TabsTrigger value="all">All Regions</TabsTrigger>
         <TabsTrigger value="asia">Asia</TabsTrigger>
         <TabsTrigger value="europe">Europe</TabsTrigger>

@@ -1,28 +1,44 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Admin-only sample bike seeding control (frontend)",
+  "title": "Fix Markdown MSRP parsing and enable editing section palette swatches",
   "requirements": [
     {
-      "id": "REQ-29",
-      "summary": "Add an admin-only UI control to trigger backend sample-bike seeding via a React Query mutation, with confirmation, error handling, and post-success query refresh.",
+      "id": "REQ-1",
+      "summary": "Make Markdown table ingestion detect MSRP/price rows with non-exact labels and reliably extract min/max prices from common currency range formats.",
       "acceptanceCriteria": [
-        "React Query includes a new mutation hook to call the backend sample seeding method, with appropriate error handling and success messaging in English.",
-        "The UI shows a clearly labeled admin-only control (e.g., a button on the Manage Bikes page) to trigger sample seeding; non-admin authenticated users and unauthenticated users do not see it.",
-        "Triggering the action shows a confirmation step before inserting the sample bikes.",
-        "On success, the frontend invalidates/refetches relevant queries so that newly seeded bikes appear without a manual refresh (at minimum: the public bikes query and the user/admin bikes management list where applicable).",
-        "If the backend rejects the call as unauthorized, the UI displays a clear English error message and does not modify the UI state."
+        "Pasting the provided Markdown table into the BikeForm \"Paste Specs\" area and clicking Apply sets both Min Price and Max Price based on the MSRP row.",
+        "The MSRP row is detected when the key includes text like \"MSRP (Global Est.)\" (i.e., matching is not limited to exact equality with \"msrp\").",
+        "Price extraction works with commas, currency symbols, en-dashes/em-dashes, and trailing currency codes (e.g., USD).",
+        "If no price row is present, existing price inputs remain unchanged."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/utils/markdownSpecs.ts",
           "operation": "modify",
-          "description": "Add a new React Query mutation hook (e.g., useSeedPopularBikeEntries) that calls actor.seedPopularBikeEntries(), shows English success messaging, and on success invalidates/refetches at minimum ['bikes'] and ['userBikes']. Ensure robust error handling: if the thrown message includes 'Unauthorized', surface a clear English admin-only error. Verify the component's usage instructions before implementing. (Uses authorization capability via existing admin detection patterns in the app.)"
+          "description": "Update MSRP/price row detection to use robust matching (e.g., key normalization + substring/keyword checks) so labels like \"MSRP (Global Est.)\" are recognized; strengthen price parsing to tolerate trailing currency codes and dash variants while still returning correct numeric min/max for ranges like \"$19,500 – $21,000 USD\"."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Enable editing an existing section palette swatch by clicking it and updating its hex value without regenerating the palette.",
+      "acceptanceCriteria": [
+        "On the Section Palettes page, clicking an existing displayed palette color opens an edit UI (e.g., dialog/popover) that lets the user enter/select a new hex color.",
+        "Saving the edit replaces only the clicked color entry in that section’s palette (no unintended regeneration of the palette).",
+        "Edited values are validated/normalized to a 6-digit hex code (consistent with existing validation behavior).",
+        "The existing remove-color control continues to work for each palette color."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PaletteSwatchEditDialog.tsx",
+          "operation": "create",
+          "description": "Create a reusable edit dialog component for updating a single palette color using shadcn-ui dialog/input/button building blocks (verify the component's usage instructions before implementing). The component should accept current color, handle hex input, call existing validateHexColor for normalization, and return the updated color on save."
         },
         {
-          "path": "frontend/src/pages/ManageBikesPage.tsx",
+          "path": "frontend/src/pages/SectionPalettesPage.tsx",
           "operation": "modify",
-          "description": "Expose an admin-only 'Seed sample bikes' action on the Manage Bikes page: use the existing authorization system's admin role signal (e.g., useCurrentUser().isAdmin) to hide the control for non-admin and unauthenticated users. Add a confirmation step (use existing AlertDialog UI already used on this page) before triggering the seed mutation. On confirm, call the new mutation hook; while running, disable the control and prevent duplicate clicks; on success rely on query invalidation so newly seeded bikes appear without manual refresh. If unauthorized, display a clear English error and do not alter local UI state beyond closing/canceling the dialog as appropriate. Verify the component's usage instructions before implementing."
+          "description": "Wire swatch click to open the new PaletteSwatchEditDialog, track which section/color is being edited, and on save replace only the clicked color value in that section’s palette array (no palette regeneration). Ensure the existing remove-color button still works by preventing click propagation from the remove control to the edit action."
         }
       ]
     }
